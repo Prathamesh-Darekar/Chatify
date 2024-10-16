@@ -21,11 +21,11 @@ const Signup = () => {
       email: "",
       password: "",
     });
-    console.log(signupData);
     const response = await axios.post(
-      "http://localhost:8080/signup",
+      "http://localhost:8080/api/user/register",
       signupData
     );
+    if (response.status == 409) alert(response.data.message);
   };
   return (
     <div>

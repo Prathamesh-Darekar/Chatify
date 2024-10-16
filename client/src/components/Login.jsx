@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 
@@ -14,16 +14,30 @@ const Login = () => {
 
   let handleSubmit = async (event) => {
     event.preventDefault();
+    setLoginData({
+      username: "",
+      password: "",
+    });
     try {
       const response = await axios.post(
-        "http://localhost:8080/login",
+        "http://localhost:8080/api/user/login",
         loginData
       );
-      localStorage.setItem("token", response.data.token);
-      alert("Login success");
-    } catch (err) {
-      console.log(err);
-      alert("Login failed");
+      if (response.status === 200) {
+        alert("Login Successful");
+      } else if (response.status == 404) {
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      const { status, message } = error;
+      if (status === 401) {
+        alert(message); // Display invalid password message
+      } else if (status === 404) {
+        alert(message); // Display user not found message
+      } else {
+        alert("An error occurred. Please try again later.");
+      }
     }
   };
 
@@ -50,7 +64,7 @@ const Login = () => {
           onChange={handleChange}
           required
         />
-        <button>Signup</button>
+        <button>Login</button>
       </form>
     </div>
   );
