@@ -4,6 +4,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const env = require("dotenv");
 const userRouter = require("./Routes/UserRouter");
+const chatRouter = require("./Routes/chatRouter");
+
 env.config();
 
 app.use(cors());
@@ -17,9 +19,15 @@ mongoose
   .then(() => console.log("Database Connected!"));
 
 app.use("/api/user", userRouter);
+app.use("/api/chat", chatRouter);
 
 app.get("/", (req, res) => {
   res.send("Server online");
+});
+
+app.use((err, req, res, next) => {
+  let { status = "500", message = "Something went wrong" } = err;
+  return res.status(status).json({ message });
 });
 
 app.listen(PORT, () => {

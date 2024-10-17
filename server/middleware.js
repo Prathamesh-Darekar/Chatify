@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const env = require("dotenv");
+env.config();
 
 const isAuthorized = (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -7,15 +9,16 @@ const isAuthorized = (req, res, next) => {
     return res
       .status(403)
       .json({ message: "Permission denied , unAuthorized access" });
-
-  jwt.verify(token, "mysecretKey@%$#", (err, user) => {
+  console.log(token);
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err)
       return res
         .status(403)
-        .json({ message: "Permission denied , unAuthorized access" });
+        .json({ message: "Permission denied , unAuthorized " });
     req.user = user;
+    console.log(user);
     next();
   });
 };
 
-module.exports = { isLoggedin, isAuthorized };
+module.exports = { isAuthorized };

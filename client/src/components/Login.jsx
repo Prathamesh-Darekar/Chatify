@@ -23,18 +23,17 @@ const Login = () => {
         "http://localhost:8080/api/user/login",
         loginData
       );
-      if (response.status === 200) {
-        alert("Login Successful");
-      } else if (response.status == 404) {
-        alert(response.data.message);
+      const { status } = response;
+      if (status === 200) {
+        alert("Login Successful!");
       }
     } catch (error) {
+      const { status } = error;
       console.log(error);
-      const { status, message } = error;
-      if (status === 401) {
-        alert(message); // Display invalid password message
-      } else if (status === 404) {
-        alert(message); // Display user not found message
+      if (status == 404) {
+        alert("Username not found!");
+      } else if (status === 401) {
+        alert("Invalid password!");
       } else {
         alert("An error occurred. Please try again later.");
       }
