@@ -1,21 +1,18 @@
 import { useState } from "react";
 import "./App.css";
-import Signup from "./components/Signup";
-import Login from "./components/Login";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { Container, Box, Tab, Tabs, Typography } from "@mui/material";
+import User from "./components/User/User";
+import Chat from "./components/mainPage/mainPage";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <Link to="/signup">Register</Link>
-      <Link to="/login">Login</Link>
+    <div>
       <Routes>
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/user" element={<User />} />
+        <Route path="/chat" element={<Chat />} />
       </Routes>
-    </>
+    </div>
   );
 }
 
