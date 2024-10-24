@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useState } from "react";
 import ChatArea from "./chatArea";
 import ChatSelector from "./chatSelector";
 import Grid from "@mui/material/Grid2";
 import { styled } from "@mui/material/styles";
-import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+import axios from "axios";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -18,6 +19,33 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const mainPage = () => {
+  let [chat, setChat] = useState([
+    {
+      username: "prathamesh Darekar",
+      latestMessage: "Hi how are you",
+    },
+  ]);
+
+  let fetchChats;
+
+  useEffect(() => {
+    fetchChats = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        let chatData = await axios.get("http://localhost:8080/api/chat/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log(chatData);
+      } catch (err) {
+        console.log("Error");
+        console.log(err);
+      }
+    };
+    fetchChats();
+  }, []);
+
   return (
     <div>
       <Grid
@@ -34,7 +62,7 @@ const mainPage = () => {
               height: "90vh",
             }}
           >
-            <ChatSelector />
+            <ChatSelector chat={chat} />
           </Item>
         </Grid>
         <Grid size={9}>

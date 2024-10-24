@@ -2,9 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { Box, Typography } from "@mui/material";
 
-const chatSelector = () => {
-  let [user, setUser] = useState([1, 2]);
-
+const chatSelector = ({ chat }) => {
   return (
     <div
       style={{
@@ -14,13 +12,17 @@ const chatSelector = () => {
         gap: "20px",
       }}
     >
-      {user.map((item, index) => (
+      {chat.map((chat, index) => (
         <Box
+          key={index}
           id="chat"
           sx={{
-            // border: "1px solid red",
+            cursor: "pointer",
             display: "flex",
             alignItems: "center",
+            "&:hover": {
+              backgroundColor: "#f0f0f0",
+            },
           }}
         >
           <Box
@@ -35,7 +37,7 @@ const chatSelector = () => {
           ></Box>
           <Box id="content" sx={{ textAlign: "left" }}>
             <Typography>
-              <b>Prathamesh Darekar</b>
+              <b>{chat.username}</b>
             </Typography>
             <Typography
               sx={{
@@ -43,7 +45,7 @@ const chatSelector = () => {
                 fontSize: "12px",
               }}
             >
-              Hi how are you doing!
+              {chat.latestMessage}
             </Typography>
           </Box>
         </Box>

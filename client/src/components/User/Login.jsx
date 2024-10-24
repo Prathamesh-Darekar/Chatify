@@ -2,7 +2,11 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+
 const Login = () => {
+  const navigate = useNavigate();
+
   let [loginData, setLoginData] = useState({
     username: "",
     password: "",
@@ -23,13 +27,14 @@ const Login = () => {
         "http://localhost:8080/api/user/login",
         loginData
       );
-      const { status } = response;
-      if (status === 200) {
-        alert("Login Successful!");
+      const { token, message } = response.data;
+      if (response.status === 200) {
+        localStorage.setItem("token", token);
+        navigate("/chat");
+        alert(message);
       }
     } catch (error) {
       const { status } = error;
-      console.log(error);
       if (status == 404) {
         alert("Username not found!");
       } else if (status === 401) {
@@ -85,6 +90,7 @@ const Login = () => {
 
         <TextField
           name="password"
+          type="password"
           label="Password"
           varient="outlined"
           size="small"

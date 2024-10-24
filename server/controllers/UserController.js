@@ -21,6 +21,24 @@ const signUp = async (req, res) => {
     password: hashedPassword,
   });
   await newUser.save();
+
+  // Checking if the user exists or not
+  const user = await User.findOne({ username });
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Password validation
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid)
+    return res.status(401).json({ message: "Invalid Password" });
+
+  // Generating JWT token
+  const token = jwt.sign(
+    { _id: user._id, username: user.username },
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
+  );
+  console.log(token);
+  res.status(200).json({ token, message: "Welcome to chatify" });
 };
 
 const loginUser = async (req, res) => {
@@ -42,7 +60,7 @@ const loginUser = async (req, res) => {
     { expiresIn: "24h" }
   );
   console.log(token);
-  res.json({ token });
+  res.status(200).json({ token, message: "Welcome to chatify" });
 };
 
 module.exports = { signUp, loginUser };

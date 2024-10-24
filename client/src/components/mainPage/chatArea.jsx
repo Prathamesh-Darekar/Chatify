@@ -6,7 +6,37 @@ import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfi
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 const chatArea = () => {
-  let [user, setUser] = useState([1, 2, 3, 4, 5, 6, 7, 8]);
+  let [message, setMessage] = useState("");
+
+  let [userChats, setUserChats] = useState([
+    {
+      role: "sender",
+      message: "hi how are you doing",
+    },
+    {
+      role: "receiver",
+      message: "hi how are you doing",
+    },
+    {
+      role: "sender",
+      message: "hi how are you doing",
+    },
+    {
+      role: "sender",
+      message: "hi how are you doing",
+    },
+  ]);
+
+  const handleClick = (event) => {
+    console.log(message);
+    setUserChats([...userChats, { role: "receiver", message }]);
+    setMessage("");
+  };
+
+  const handleChange = (event) => {
+    setMessage(event.target.value);
+  };
+
   return (
     <div
       style={{
@@ -58,19 +88,29 @@ const chatArea = () => {
             </Box>
           </Box>
         </Box>
-        <Box p={2} sx={{ textAlign: "left" }}>
-          Lorem, ipsum dolor sit amet consectetur adipisicing elit. Libero
-          nesciunt dolorem deserunt nisi ratione, veniam accusamus facilis iste?
-          Neque adipisci eaque incidunt expedita repudiandae quibusdam, suscipit
-          odit amet ex cumque a magni consectetur ad. Sapiente id temporibus,
-          quae veniam debitis laudantium. Explicabo, provident! Ut aliquam omnis
-          sequi corporis autem ex corrupti obcaecati repellat esse nobis magnam,
-          iure, maxime quam perspiciatis. Mollitia perspiciatis excepturi ipsa,
-          esse laborum neque blanditiis iure aliquid cupiditate! Reprehenderit
-          enim non dolorem tempore veniam voluptatem nisi dolores natus,
-          blanditiis sit delectus facere dolore temporibus sed quibusdam numquam
-          officia, quos perferendis, corrupti rerum alias maiores. Itaque,
-          necessitatibus sit.
+        <Box
+          p={2}
+          sx={{
+            textAlign: "left",
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+          }}
+        >
+          {userChats.map((user, index) => (
+            <Box
+              key={index}
+              sx={{
+                backgroundColor: "#015D4B",
+                color: "#fff",
+                alignSelf: user.role == "sender" ? "flex-end" : "flex-start",
+                padding: "10px 20px",
+                borderRadius: "20px",
+              }}
+            >
+              <Typography sx={{ fontSize: "14px" }}>{user.message}</Typography>
+            </Box>
+          ))}
         </Box>
       </Box>
       <Box
@@ -83,7 +123,8 @@ const chatArea = () => {
         }}
       >
         <TextField
-          name="username"
+          name="message"
+          value={message}
           id="standard-basic"
           variant="standard"
           placeholder="Message"
@@ -91,13 +132,25 @@ const chatArea = () => {
           required
           sx={{
             width: "80%",
-            // backgroundColor: "#F7F6F4",
-            padding: "5px",
           }}
+          onChange={handleChange}
         />
-        <SentimentSatisfiedOutlinedIcon color="primary" fontSize="large" />
-        <AddOutlinedIcon color="primary" fontSize="large" />
-        <SendIcon color="primary" fontSize="large" />
+        <SentimentSatisfiedOutlinedIcon
+          sx={{ cursor: "pointer" }}
+          color="primary"
+          fontSize="large"
+        />
+        <AddOutlinedIcon
+          sx={{ cursor: "pointer" }}
+          color="primary"
+          fontSize="large"
+        />
+        <SendIcon
+          color="primary"
+          sx={{ cursor: "pointer" }}
+          onClick={handleClick}
+          fontSize="large"
+        />
       </Box>
     </div>
   );

@@ -2,8 +2,10 @@ import React from "react";
 import axios from "axios";
 import { useState } from "react";
 import { Container, TextField, Button, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
+  let navigate = useNavigate();
   let [signupData, setSignupData] = useState({
     username: "",
     password: "",
@@ -32,7 +34,12 @@ const Signup = () => {
         "http://localhost:8080/api/user/register",
         newData
       );
-      console.log(response);
+      if (response.status == 200) {
+        const { token, message } = response.data;
+        localStorage.setItem("token", token);
+        navigate("/chat");
+        alert(message);
+      }
     } catch (err) {
       alert(err.response.data.message);
     }

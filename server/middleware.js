@@ -3,6 +3,8 @@ const env = require("dotenv");
 env.config();
 
 const isAuthorized = (req, res, next) => {
+  console.log("is Authorized");
+
   // checking if the request has authorization header
   const authHeader = req.headers["authorization"];
 
@@ -16,10 +18,12 @@ const isAuthorized = (req, res, next) => {
 
   // Authenticating the user
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err)
+    if (err) {
+      console.log(err);
       return res
         .status(403)
         .json({ message: "Permission denied , unAuthorized " });
+    }
     // Saving the user object
     req.user = user;
     next();
