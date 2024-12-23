@@ -12,6 +12,12 @@ const userSchema = Schema({
     required: true,
     trim: true,
   },
+  chats: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Chat",
+    },
+  ],
 });
 
 module.exports = mongoose.model("User", userSchema);

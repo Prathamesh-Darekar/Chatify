@@ -22,7 +22,7 @@ const chatArea = () => {
       message: "hi how are you doing",
     },
     {
-      role: "sender",
+      role: "receiver",
       message: "hi how are you doing",
     },
   ]);
@@ -95,6 +95,8 @@ const chatArea = () => {
             display: "flex",
             flexDirection: "column",
             gap: "20px",
+            overflowY: "scroll",
+            height: "24rem",
           }}
         >
           {userChats.map((user, index) => (

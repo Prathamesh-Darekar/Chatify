@@ -6,6 +6,7 @@ import Grid from "@mui/material/Grid2";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -18,34 +19,40 @@ const Item = styled(Paper)(({ theme }) => ({
   }),
 }));
 
-const mainPage = () => {
+const mainPage = (props) => {
+  const navigate = useNavigate();
+
   let [chat, setChat] = useState([
     {
-      username: "prathamesh Darekar",
+      chatName: "prathamesh Darekar",
       latestMessage: "Hi how are you",
     },
   ]);
 
   let fetchChats;
-
+  let isAuthorized;
   useEffect(() => {
+    // get message between 2 users
     fetchChats = async () => {
       try {
         const token = localStorage.getItem("token");
-        let chatData = await axios.get("http://localhost:8080/api/chat/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(chatData);
+        let chatData = await axios.get(
+          `http://localhost:8080/api/chat/${props.userDetails}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setChat(chatData.data);
       } catch (err) {
-        console.log("Error");
-        console.log(err);
+        console.log("Error in mainPage.jsx component");
+        navigate("/");
       }
     };
     fetchChats();
   }, []);
-
+  if (isAuthorized == false) return <div>Not authorized</div>;
   return (
     <div>
       <Grid
@@ -62,7 +69,7 @@ const mainPage = () => {
               height: "90vh",
             }}
           >
-            <ChatSelector chat={chat} />
+            <ChatSelector chat={chat} userDetails={props.userDetails} />
           </Item>
         </Grid>
         <Grid size={9}>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const Signup = () => {
+const Signup = (props) => {
   let navigate = useNavigate();
   let [signupData, setSignupData] = useState({
     username: "",
@@ -35,12 +35,14 @@ const Signup = () => {
         newData
       );
       if (response.status == 200) {
-        const { token, message } = response.data;
+        const { token, message, user } = response.data;
+        props.updateUser(user.username);
         localStorage.setItem("token", token);
         navigate("/chat");
         alert(message);
       }
     } catch (err) {
+      console.log("Error in Signup.jsx component");
       alert(err.response.data.message);
     }
   };

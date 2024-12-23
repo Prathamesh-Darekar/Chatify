@@ -4,7 +4,7 @@ import axios from "axios";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
-const Login = () => {
+const Login = (props) => {
   const navigate = useNavigate();
 
   let [loginData, setLoginData] = useState({
@@ -27,8 +27,9 @@ const Login = () => {
         "http://localhost:8080/api/user/login",
         loginData
       );
-      const { token, message } = response.data;
+      const { token, message, user } = response.data;
       if (response.status === 200) {
+        props.updateUser(user.username);
         localStorage.setItem("token", token);
         navigate("/chat");
         alert(message);
@@ -40,6 +41,7 @@ const Login = () => {
       } else if (status === 401) {
         alert("Invalid password!");
       } else {
+        console.log(error);
         alert("An error occurred. Please try again later.");
       }
     }

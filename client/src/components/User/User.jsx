@@ -25,9 +25,9 @@ function TabPanel(props) {
   );
 }
 
-const User = () => {
+const User = (props) => {
   const [value, setValue] = useState(0);
-
+  console.log("hi");
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
@@ -62,10 +62,10 @@ const User = () => {
           }}
         >
           <TabPanel value={value} index={0}>
-            <Login />
+            <Login updateUser={props.updateUser} />
           </TabPanel>
           <TabPanel value={value} index={1}>
-            <Signup />
+            <Signup updateUser={props.updateUser} />
           </TabPanel>
         </Box>
         <Link to="/chat">Chat</Link>

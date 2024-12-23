@@ -38,7 +38,7 @@ const signUp = async (req, res) => {
     { expiresIn: "24h" }
   );
   console.log(token);
-  res.status(200).json({ token, message: "Welcome to chatify" });
+  res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
 const loginUser = async (req, res) => {
@@ -60,7 +60,12 @@ const loginUser = async (req, res) => {
     { expiresIn: "24h" }
   );
   console.log(token);
-  res.status(200).json({ token, message: "Welcome to chatify" });
+  res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
-module.exports = { signUp, loginUser };
+const getAllUsers = async (req, res) => {
+  let data = await User.find().populate("chats");
+  return res.json(data);
+};
+
+module.exports = { signUp, loginUser, getAllUsers };

@@ -1,8 +1,18 @@
-import React from "react";
-import { useState } from "react";
-import { Box, Typography } from "@mui/material";
+import React, { useState } from "react";
+import InputAdornment from "@mui/material/InputAdornment";
+import SearchIcon from "@mui/icons-material/Search";
+import IconButton from "@mui/material/IconButton";
+import { Box, Typography, TextField } from "@mui/material";
 
-const chatSelector = ({ chat }) => {
+const chatSelector = ({ chat, userDetails }) => {
+  let [searchValue, setSearchValue] = useState("");
+  let handleChange = (e) => {
+    setSearchValue(e.target.value);
+  };
+  let handleSearchClick = async (e) => {
+    console.log(searchValue);
+    //PENDING....
+  };
   return (
     <div
       style={{
@@ -12,6 +22,23 @@ const chatSelector = ({ chat }) => {
         gap: "20px",
       }}
     >
+      <TextField
+        variant="outlined"
+        placeholder="Search..."
+        name="searchResult"
+        value={searchValue}
+        onChange={handleChange}
+        fullWidth
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={handleSearchClick}>
+                <SearchIcon />
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+      />
       {chat.map((chat, index) => (
         <Box
           key={index}
@@ -37,7 +64,7 @@ const chatSelector = ({ chat }) => {
           ></Box>
           <Box id="content" sx={{ textAlign: "left" }}>
             <Typography>
-              <b>{chat.username}</b>
+              <b>{chat.chatName}</b>
             </Typography>
             <Typography
               sx={{
