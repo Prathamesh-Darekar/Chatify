@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid2";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Routes, Route, Link } from "react-router-dom";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -21,11 +21,18 @@ const Item = styled(Paper)(({ theme }) => ({
 
 const mainPage = (props) => {
   const navigate = useNavigate();
+  // chat id of the selected chat from chat selector
+  let [chat_id, setChat_id] = useState("");
+
+  let updateChat_id = (id) => {
+    setChat_id(id);
+  };
 
   let [chat, setChat] = useState([
     {
       chatName: "prathamesh Darekar",
       latestMessage: "Hi how are you",
+      chat_id: "",
     },
   ]);
 
@@ -37,7 +44,7 @@ const mainPage = (props) => {
       try {
         const token = localStorage.getItem("token");
         let chatData = await axios.get(
-          `http://localhost:8080/api/chat/${props.userDetails}`,
+          `http://localhost:8080/api/chat/${props.userDetails.username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -52,6 +59,9 @@ const mainPage = (props) => {
     };
     fetchChats();
   }, []);
+  useEffect(() => {
+    console.log(chat);
+  }, [chat]);
   if (isAuthorized == false) return <div>Not authorized</div>;
   return (
     <div>
@@ -69,7 +79,11 @@ const mainPage = (props) => {
               height: "90vh",
             }}
           >
-            <ChatSelector chat={chat} userDetails={props.userDetails} />
+            <ChatSelector
+              chat={chat}
+              userDetails={props.userDetails}
+              updateChat_id={updateChat_id}
+            />
           </Item>
         </Grid>
         <Grid size={9}>
@@ -78,7 +92,7 @@ const mainPage = (props) => {
               height: "90vh",
             }}
           >
-            <ChatArea />
+            <ChatArea chat_id={chat_id} userDetails={props.userDetails} />
           </Item>
         </Grid>
       </Grid>

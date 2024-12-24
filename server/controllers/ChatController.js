@@ -60,4 +60,30 @@ const showChats = async (req, res) => {
   return res.json(arr);
 };
 
-module.exports = { accessChat, showChats };
+const getChatDetails = async (req, res) => {
+  console.log("This is getChatDetails");
+  try {
+    const chat_id = req.params.chat_id;
+    const username = req.params.username;
+    let chatDetails = await Chat.findById(chat_id).populate("messages");
+    let chatName;
+    if (chatDetails.isGroupChat) {
+      chatName = chatDetails.chatName;
+    } else {
+      let name = await User.findById(chatDetails.users[0], "-password");
+      if (name.username != username) {
+        chatName = name.username;
+      } else {
+        let name2 = await User.findById(chatDetails.users[1], "-password");
+        chatName = name2.username;
+      }
+    }
+    let chatMessages = chatDetails.messages;
+    let response = { chatMessages, chatName };
+    return res.json(response);
+  } catch (err) {
+    console.log("Error in getChatDetails server");
+  }
+};
+
+module.exports = { accessChat, showChats, getChatDetails };

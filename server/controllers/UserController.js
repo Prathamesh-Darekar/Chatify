@@ -63,6 +63,7 @@ const loginUser = async (req, res) => {
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
+//PENDING...
 const getAllUsers = async (req, res) => {
   let data = await User.find().populate("chats");
   return res.json(data);

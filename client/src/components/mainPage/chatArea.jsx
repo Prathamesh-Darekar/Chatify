@@ -1,40 +1,47 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import axios from "axios";
 
-const chatArea = () => {
-  let [message, setMessage] = useState("");
+const chatArea = ({ chat_id, userDetails }) => {
+  // value enteres in the textfield of chatarea
+  let [newMessage, setNewMessage] = useState("");
+  let [chatName, setChatName] = useState("");
+  // ADD API CALL TO FETCH THE MESSAGES OF THE CHAT BASED ON chat_id
+  useEffect(() => {
+    let getChatMessages = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        let response = await axios.get(
+          `http://localhost:8080/api/chat/${userDetails.username}/${chat_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log(response.data);
+        setUserChats(response.data.chatMessages);
+        setChatName(response.data.chatName);
+      } catch (err) {
+        console.log(err);
+        console.log("Error in chatArea.jsx");
+      }
+    };
+    if (chat_id) getChatMessages();
+  }, [chat_id]);
 
-  let [userChats, setUserChats] = useState([
-    {
-      role: "sender",
-      message: "hi how are you doing",
-    },
-    {
-      role: "receiver",
-      message: "hi how are you doing",
-    },
-    {
-      role: "sender",
-      message: "hi how are you doing",
-    },
-    {
-      role: "receiver",
-      message: "hi how are you doing",
-    },
-  ]);
+  let [userChats, setUserChats] = useState([]);
 
-  const handleClick = (event) => {
-    console.log(message);
-    setUserChats([...userChats, { role: "receiver", message }]);
-    setMessage("");
+  const handleSendMessage = (event) => {
+    // PENDING...
   };
 
   const handleChange = (event) => {
-    setMessage(event.target.value);
+    setNewMessage(event.target.value);
   };
 
   return (
@@ -75,7 +82,7 @@ const chatArea = () => {
             ></Box>
             <Box id="content" sx={{ textAlign: "left" }}>
               <Typography>
-                <b>Prathamesh Darekar</b>
+                <b>{chatName}</b>
               </Typography>
               <Typography
                 sx={{
@@ -105,12 +112,13 @@ const chatArea = () => {
               sx={{
                 backgroundColor: "#015D4B",
                 color: "#fff",
-                alignSelf: user.role == "sender" ? "flex-end" : "flex-start",
+                alignSelf:
+                  user.sender == userDetails.userId ? "flex-end" : "flex-start",
                 padding: "10px 20px",
                 borderRadius: "20px",
               }}
             >
-              <Typography sx={{ fontSize: "14px" }}>{user.message}</Typography>
+              <Typography sx={{ fontSize: "14px" }}>{user.content}</Typography>
             </Box>
           ))}
         </Box>
@@ -126,7 +134,7 @@ const chatArea = () => {
       >
         <TextField
           name="message"
-          value={message}
+          value={newMessage}
           id="standard-basic"
           variant="standard"
           placeholder="Message"
@@ -150,7 +158,7 @@ const chatArea = () => {
         <SendIcon
           color="primary"
           sx={{ cursor: "pointer" }}
-          onClick={handleClick}
+          onClick={handleSendMessage}
           fontSize="large"
         />
       </Box>

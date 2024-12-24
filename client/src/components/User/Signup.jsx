@@ -36,7 +36,7 @@ const Signup = (props) => {
       );
       if (response.status == 200) {
         const { token, message, user } = response.data;
-        props.updateUser(user.username);
+        props.updateUser({ userId: user._id, username: user.username });
         localStorage.setItem("token", token);
         navigate("/chat");
         alert(message);

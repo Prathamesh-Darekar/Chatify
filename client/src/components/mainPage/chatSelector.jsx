@@ -4,7 +4,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import { Box, Typography, TextField } from "@mui/material";
 
-const chatSelector = ({ chat, userDetails }) => {
+const chatSelector = ({ chat, userDetails, updateChat_id }) => {
   let [searchValue, setSearchValue] = useState("");
   let handleChange = (e) => {
     setSearchValue(e.target.value);
@@ -13,6 +13,11 @@ const chatSelector = ({ chat, userDetails }) => {
     console.log(searchValue);
     //PENDING....
   };
+
+  let handleClick = async (chat_id) => {
+    updateChat_id(chat_id);
+  };
+
   return (
     <div
       style={{
@@ -43,6 +48,7 @@ const chatSelector = ({ chat, userDetails }) => {
         <Box
           key={index}
           id="chat"
+          onClick={() => handleClick(chat.chat_id)}
           sx={{
             cursor: "pointer",
             display: "flex",

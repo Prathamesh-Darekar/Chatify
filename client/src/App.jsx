@@ -5,7 +5,10 @@ import User from "./components/User/User";
 import Chat from "./components/mainPage/mainPage";
 
 function App() {
-  let [userDetails, setUserDetails] = useState("g");
+  let [userDetails, setUserDetails] = useState({
+    userId: "",
+    username: "",
+  });
   let updateUserDetails = (username) => {
     setUserDetails(username);
   };

@@ -22,6 +22,7 @@ const Login = (props) => {
       username: "",
       password: "",
     });
+
     try {
       const response = await axios.post(
         "http://localhost:8080/api/user/login",
@@ -29,7 +30,7 @@ const Login = (props) => {
       );
       const { token, message, user } = response.data;
       if (response.status === 200) {
-        props.updateUser(user.username);
+        props.updateUser({ userId: user._id, username: user.username });
         localStorage.setItem("token", token);
         navigate("/chat");
         alert(message);
