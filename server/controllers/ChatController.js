@@ -2,8 +2,12 @@ const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Message = require("../models/Message");
 
+//PENDING RELATED TO SEARCHING CHATS
 const accessChat = async (req, res) => {
   const userId = req.user._id;
+
+  if (!userId)
+    return res.status(400).json({ message: "Please provide user id" });
 
   // // Fetching and populating the chat from DB if present
   let chat = await Chat.find({
@@ -33,12 +37,16 @@ const accessChat = async (req, res) => {
 // API THAT RETURNS ALL THE CHATS OF A USER
 const showChats = async (req, res) => {
   const username = req.params.username;
+  if (!username)
+    return res.status(400).json({ message: "Please provide username" });
   let arr = [];
   let userDetails, data;
   userDetails = await User.findOne(
     { username: username },
     "-password"
   ).populate("chats", "_id");
+  if (!userDetails)
+    return res.status(404).json({ message: "Invalid username" });
   for (let chatData of userDetails.chats) {
     let chatname;
     data = await Chat.findById(chatData)
@@ -61,29 +69,29 @@ const showChats = async (req, res) => {
 };
 
 const getChatDetails = async (req, res) => {
-  console.log("This is getChatDetails");
-  try {
-    const chat_id = req.params.chat_id;
-    const username = req.params.username;
-    let chatDetails = await Chat.findById(chat_id).populate("messages");
-    let chatName;
-    if (chatDetails.isGroupChat) {
-      chatName = chatDetails.chatName;
+  const chat_id = req.params.chat_id;
+  const username = req.params.username;
+  if (!(chat_id && username))
+    return res
+      .status(400)
+      .json({ message: "Please provide chat_id and username" });
+  let chatDetails = await Chat.findById(chat_id).populate("messages");
+  if (!chatDetails) return res.status(404).json({ message: "Invalid chat id" });
+  let chatName;
+  if (chatDetails.isGroupChat) {
+    chatName = chatDetails.chatName;
+  } else {
+    let name = await User.findById(chatDetails.users[0], "-password");
+    if (name.username != username) {
+      chatName = name.username;
     } else {
-      let name = await User.findById(chatDetails.users[0], "-password");
-      if (name.username != username) {
-        chatName = name.username;
-      } else {
-        let name2 = await User.findById(chatDetails.users[1], "-password");
-        chatName = name2.username;
-      }
+      let name2 = await User.findById(chatDetails.users[1], "-password");
+      chatName = name2.username;
     }
-    let chatMessages = chatDetails.messages;
-    let response = { chatMessages, chatName };
-    return res.json(response);
-  } catch (err) {
-    console.log("Error in getChatDetails server");
   }
+  let chatMessages = chatDetails.messages;
+  let response = { chatMessages, chatName };
+  return res.json(response);
 };
 
 module.exports = { accessChat, showChats, getChatDetails };

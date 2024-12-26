@@ -6,6 +6,11 @@ const env = require("dotenv").config();
 const signUp = async (req, res) => {
   const { username, password } = req.body;
 
+  if (!(username && password))
+    return res
+      .status(400)
+      .json({ message: "Please provide username and password" });
+
   // Checking if the user already exists or not
   const existingUser = await User.findOne({ username: username });
   if (existingUser) {
@@ -31,6 +36,8 @@ const signUp = async (req, res) => {
   if (!isPasswordValid)
     return res.status(401).json({ message: "Invalid Password" });
 
+  user.password = "";
+
   // Generating JWT token
   const token = jwt.sign(
     { _id: user._id, username: user.username },
@@ -44,6 +51,11 @@ const signUp = async (req, res) => {
 const loginUser = async (req, res) => {
   const { username, password } = req.body;
 
+  if (!(username && password))
+    return res
+      .status(400)
+      .json({ message: "Please provide username and password" });
+
   // Checking if the user exists or not
   const user = await User.findOne({ username });
   if (!user) return res.status(404).json({ message: "User not found" });
@@ -52,6 +64,8 @@ const loginUser = async (req, res) => {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid)
     return res.status(401).json({ message: "Invalid Password" });
+
+  user.password = "";
 
   // Generating JWT token
   const token = jwt.sign(
