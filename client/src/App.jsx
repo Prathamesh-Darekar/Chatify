@@ -1,8 +1,10 @@
 import { useState } from "react";
 import "./App.css";
 import { Routes, Route } from "react-router-dom";
-import User from "./components/User/User";
-import Chat from "./components/mainPage/mainPage";
+import User from "./Pages/User";
+import Chat from "./Pages/mainPage";
+import PageNotFound from "./Pages/PageNotFound";
+import Unauthorized from "./Pages/Unauthorized";
 
 function App() {
   let [userDetails, setUserDetails] = useState({
@@ -12,12 +14,12 @@ function App() {
   let updateUserDetails = (username) => {
     setUserDetails(username);
   };
-  console.log(userDetails);
   return (
     <div>
       <Routes>
         <Route path="/" element={<User updateUser={updateUserDetails} />} />
         <Route path="/chat" element={<Chat userDetails={userDetails} />} />
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
   );

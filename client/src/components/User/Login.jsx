@@ -1,12 +1,11 @@
-import React, { useEffect } from "react";
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const Login = (props) => {
   const navigate = useNavigate();
-
+  //stores login form data
   let [loginData, setLoginData] = useState({
     username: "",
     password: "",
@@ -24,27 +23,24 @@ const Login = (props) => {
     });
 
     try {
+      // request to server
       const response = await axios.post(
         "http://localhost:8080/api/user/login",
         loginData
       );
       const { token, message, user } = response.data;
+      // correct response
       if (response.status === 200) {
         props.updateUser({ userId: user._id, username: user.username });
+        // store the jwt token in local storage
         localStorage.setItem("token", token);
+        // rediect to chat page
         navigate("/chat");
         alert(message);
       }
     } catch (error) {
-      const { status } = error;
-      if (status == 404) {
-        alert("Username not found!");
-      } else if (status === 401) {
-        alert("Invalid password!");
-      } else {
-        console.log(error);
-        alert("An error occurred. Please try again later.");
-      }
+      // any status code except 200 to 299 is treated as error and triggers catch block
+      alert(error.response.data.message);
     }
   };
 

@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import axios from "axios";
-import { useState } from "react";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const Signup = (props) => {
   let navigate = useNavigate();
+  // Stores the signup form data
   let [signupData, setSignupData] = useState({
     username: "",
     password: "",
@@ -18,6 +18,7 @@ const Signup = (props) => {
 
   let handleSubmit = async (event) => {
     event.preventDefault();
+    // validates password and confirm password
     if (signupData.password != signupData.cpassword)
       return alert("Password does not match");
     const newData = {
@@ -30,22 +31,27 @@ const Signup = (props) => {
       cpassword: "",
     });
     try {
+      // request to server
       const response = await axios.post(
         "http://localhost:8080/api/user/register",
         newData
       );
+      // correct response
       if (response.status == 200) {
         const { token, message, user } = response.data;
         props.updateUser({ userId: user._id, username: user.username });
+        // store the session token in local storage
         localStorage.setItem("token", token);
+        // redirect to chat page
         navigate("/chat");
         alert(message);
       }
     } catch (err) {
-      console.log("Error in Signup.jsx component");
+      // any status code except 200 to 299 is treated as error and triggers catch block
       alert(err.response.data.message);
     }
   };
+
   return (
     <Container>
       <form

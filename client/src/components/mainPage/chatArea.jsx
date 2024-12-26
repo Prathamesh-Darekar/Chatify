@@ -1,5 +1,4 @@
-import React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
@@ -7,14 +6,17 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import axios from "axios";
 
 const chatArea = ({ chat_id, userDetails }) => {
-  // value enteres in the textfield of chatarea
+  // stores the value entered in the textfield of chatarea
   let [newMessage, setNewMessage] = useState("");
+  // to store all the mesages of a chat
+  let [userChats, setUserChats] = useState([]);
   let [chatName, setChatName] = useState("");
-  // ADD API CALL TO FETCH THE MESSAGES OF THE CHAT BASED ON chat_id
   useEffect(() => {
     let getChatMessages = async () => {
       try {
+        // get the jwt token from local sotrage
         const token = localStorage.getItem("token");
+        // ADD API CALL TO FETCH THE MESSAGES OF THE CHAT BASED ON chat_id
         let response = await axios.get(
           `http://localhost:8080/api/chat/${userDetails.username}/${chat_id}`,
           {
@@ -23,18 +25,17 @@ const chatArea = ({ chat_id, userDetails }) => {
             },
           }
         );
-        console.log(response.data);
-        setUserChats(response.data.chatMessages);
-        setChatName(response.data.chatName);
+        if (response.status == 200) {
+          setUserChats(response.data.chatMessages);
+          setChatName(response.data.chatName);
+        }
       } catch (err) {
-        console.log(err);
         console.log("Error in chatArea.jsx");
+        alert(err.response.data.message);
       }
     };
     if (chat_id) getChatMessages();
   }, [chat_id]);
-
-  let [userChats, setUserChats] = useState([]);
 
   const handleSendMessage = (event) => {
     // PENDING...
@@ -65,7 +66,6 @@ const chatArea = ({ chat_id, userDetails }) => {
           <Box
             id="chat"
             sx={{
-              // border: "1px solid red",
               display: "flex",
               alignItems: "center",
             }}

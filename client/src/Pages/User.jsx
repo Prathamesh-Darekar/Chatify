@@ -1,8 +1,8 @@
 import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import Signup from "./Signup";
-import Login from "./Login";
+import Signup from "../components/User/Signup";
+import Login from "../components/User/Login";
 import { Container, Box, Tab, Tabs, Typography } from "@mui/material";
 
 function TabPanel(props) {
@@ -27,7 +27,6 @@ function TabPanel(props) {
 
 const User = (props) => {
   const [value, setValue] = useState(0);
-  console.log("hi");
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };

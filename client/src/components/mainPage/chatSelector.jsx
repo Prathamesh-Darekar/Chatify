@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import { Box, Typography, TextField } from "@mui/material";
 
-const chatSelector = ({ chat, userDetails, updateChat_id }) => {
+const chatSelector = ({ userDetails, updateChat_id }) => {
+  const navigate = useNavigate();
+  // to store the search value
   let [searchValue, setSearchValue] = useState("");
   let handleChange = (e) => {
     setSearchValue(e.target.value);
@@ -13,6 +17,41 @@ const chatSelector = ({ chat, userDetails, updateChat_id }) => {
     console.log(searchValue);
     //PENDING....
   };
+
+  // To store all the chats of a user
+  let [chat, setChat] = useState([
+    {
+      chatName: "",
+      latestMessage: "",
+      chat_id: "",
+    },
+  ]);
+
+  let fetchChats;
+  useEffect(() => {
+    // get all the messages of a chat
+    fetchChats = async () => {
+      try {
+        // get the jwt token from local sotrage
+        const token = localStorage.getItem("token");
+        // request to server with jwt token
+        let response = await axios.get(
+          `http://localhost:8080/api/chat/${userDetails.username}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response.status == 200) setChat(response.data);
+      } catch (err) {
+        console.log("Error in mainPage.jsx component");
+        alert(err.response.data.message);
+        navigate("/");
+      }
+    };
+    fetchChats();
+  }, []);
 
   let handleClick = async (chat_id) => {
     updateChat_id(chat_id);

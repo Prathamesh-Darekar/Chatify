@@ -1,12 +1,9 @@
-import React, { useEffect } from "react";
-import { useState } from "react";
-import ChatArea from "./chatArea";
-import ChatSelector from "./chatSelector";
+import React, { useEffect, useState } from "react";
+import ChatArea from "../components/mainPage/chatArea";
+import ChatSelector from "../components/mainPage/chatSelector";
 import Grid from "@mui/material/Grid2";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import axios from "axios";
-import { useNavigate, Routes, Route, Link } from "react-router-dom";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: "#fff",
@@ -20,48 +17,13 @@ const Item = styled(Paper)(({ theme }) => ({
 }));
 
 const mainPage = (props) => {
-  const navigate = useNavigate();
-  // chat id of the selected chat from chat selector
+  // to store the chat id of the selected chat from chat selector
   let [chat_id, setChat_id] = useState("");
 
   let updateChat_id = (id) => {
     setChat_id(id);
   };
-
-  let [chat, setChat] = useState([
-    {
-      chatName: "prathamesh Darekar",
-      latestMessage: "Hi how are you",
-      chat_id: "",
-    },
-  ]);
-
-  let fetchChats;
   let isAuthorized;
-  useEffect(() => {
-    // get message between 2 users
-    fetchChats = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        let chatData = await axios.get(
-          `http://localhost:8080/api/chat/${props.userDetails.username}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setChat(chatData.data);
-      } catch (err) {
-        console.log("Error in mainPage.jsx component");
-        navigate("/");
-      }
-    };
-    fetchChats();
-  }, []);
-  useEffect(() => {
-    console.log(chat);
-  }, [chat]);
   if (isAuthorized == false) return <div>Not authorized</div>;
   return (
     <div>
@@ -80,7 +42,6 @@ const mainPage = (props) => {
             }}
           >
             <ChatSelector
-              chat={chat}
               userDetails={props.userDetails}
               updateChat_id={updateChat_id}
             />

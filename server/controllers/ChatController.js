@@ -65,7 +65,7 @@ const showChats = async (req, res) => {
     };
     arr.push(newObj);
   }
-  return res.json(arr);
+  return res.status(200).json(arr);
 };
 
 const getChatDetails = async (req, res) => {
@@ -91,7 +91,7 @@ const getChatDetails = async (req, res) => {
   }
   let chatMessages = chatDetails.messages;
   let response = { chatMessages, chatName };
-  return res.json(response);
+  return res.status(200).json(response);
 };
 
 module.exports = { accessChat, showChats, getChatDetails };
