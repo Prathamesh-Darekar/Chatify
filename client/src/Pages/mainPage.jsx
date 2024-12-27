@@ -16,15 +16,13 @@ const Item = styled(Paper)(({ theme }) => ({
   }),
 }));
 
-const mainPage = (props) => {
+const mainPage = () => {
   // to store the chat id of the selected chat from chat selector
   let [chat_id, setChat_id] = useState("");
 
   let updateChat_id = (id) => {
     setChat_id(id);
   };
-  let isAuthorized;
-  if (isAuthorized == false) return <div>Not authorized</div>;
   return (
     <div>
       <Grid
@@ -41,10 +39,7 @@ const mainPage = (props) => {
               height: "90vh",
             }}
           >
-            <ChatSelector
-              userDetails={props.userDetails}
-              updateChat_id={updateChat_id}
-            />
+            <ChatSelector updateChat_id={updateChat_id} />
           </Item>
         </Grid>
         <Grid size={9}>
@@ -53,7 +48,7 @@ const mainPage = (props) => {
               height: "90vh",
             }}
           >
-            <ChatArea chat_id={chat_id} userDetails={props.userDetails} />
+            <ChatArea chat_id={chat_id} />
           </Item>
         </Grid>
       </Grid>

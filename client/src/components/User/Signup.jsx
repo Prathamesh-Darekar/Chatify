@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { userContext } from "../../Context/UserState";
 
-const Signup = (props) => {
+const Signup = () => {
   let navigate = useNavigate();
+  let user1 = useContext(userContext);
   // Stores the signup form data
   let [signupData, setSignupData] = useState({
     username: "",
@@ -39,7 +41,7 @@ const Signup = (props) => {
       // correct response
       if (response.status == 200) {
         const { token, message, user } = response.data;
-        props.updateUser({ userId: user._id, username: user.username });
+        user1.updateUserDetails({ userId: user._id, username: user.username });
         // store the session token in local storage
         localStorage.setItem("token", token);
         // redirect to chat page

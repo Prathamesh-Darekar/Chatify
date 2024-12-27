@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import axios from "axios";
+import { userContext } from "../../Context/UserState";
 
-const chatArea = ({ chat_id, userDetails }) => {
+const chatArea = ({ chat_id }) => {
+  let user = useContext(userContext);
   // stores the value entered in the textfield of chatarea
   let [newMessage, setNewMessage] = useState("");
   // to store all the mesages of a chat
@@ -18,7 +20,7 @@ const chatArea = ({ chat_id, userDetails }) => {
         const token = localStorage.getItem("token");
         // ADD API CALL TO FETCH THE MESSAGES OF THE CHAT BASED ON chat_id
         let response = await axios.get(
-          `http://localhost:8080/api/chat/${userDetails.username}/${chat_id}`,
+          `http://localhost:8080/api/chat/${user.userDetails.username}/${chat_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -106,19 +108,21 @@ const chatArea = ({ chat_id, userDetails }) => {
             height: "24rem",
           }}
         >
-          {userChats.map((user, index) => (
+          {userChats.map((User, index) => (
             <Box
               key={index}
               sx={{
                 backgroundColor: "#015D4B",
                 color: "#fff",
                 alignSelf:
-                  user.sender == userDetails.userId ? "flex-end" : "flex-start",
+                  User.sender == user.userDetails.userId
+                    ? "flex-end"
+                    : "flex-start",
                 padding: "10px 20px",
                 borderRadius: "20px",
               }}
             >
-              <Typography sx={{ fontSize: "14px" }}>{user.content}</Typography>
+              <Typography sx={{ fontSize: "14px" }}>{User.content}</Typography>
             </Box>
           ))}
         </Box>

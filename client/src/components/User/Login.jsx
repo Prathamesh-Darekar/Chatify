@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import { Container, TextField, Button, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { userContext } from "../../Context/UserState";
 
-const Login = (props) => {
+const Login = () => {
   const navigate = useNavigate();
+  let user1 = useContext(userContext);
   //stores login form data
   let [loginData, setLoginData] = useState({
     username: "",
@@ -31,7 +33,10 @@ const Login = (props) => {
       const { token, message, user } = response.data;
       // correct response
       if (response.status === 200) {
-        props.updateUser({ userId: user._id, username: user.username });
+        user1.updateUserDetails({
+          userId: user._id,
+          username: user.username,
+        });
         // store the jwt token in local storage
         localStorage.setItem("token", token);
         // rediect to chat page
@@ -40,7 +45,7 @@ const Login = (props) => {
       }
     } catch (error) {
       // any status code except 200 to 299 is treated as error and triggers catch block
-      alert(error.response.data.message);
+      console.log(error);
     }
   };
 

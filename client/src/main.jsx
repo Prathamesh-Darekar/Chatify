@@ -7,9 +7,12 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import App from "./App.jsx";
 import "./index.css";
+import { UserState } from "./Context/UserState.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <App />
-  </BrowserRouter>
+  <UserState>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </UserState>
 );

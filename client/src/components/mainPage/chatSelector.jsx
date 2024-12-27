@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import InputAdornment from "@mui/material/InputAdornment";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import { Box, Typography, TextField } from "@mui/material";
+import { userContext } from "../../Context/UserState";
 
-const chatSelector = ({ userDetails, updateChat_id }) => {
+const chatSelector = ({ updateChat_id }) => {
+  let user = useContext(userContext);
+  const token = localStorage.getItem("token");
   const navigate = useNavigate();
   // to store the search value
   let [searchValue, setSearchValue] = useState("");
   let handleChange = (e) => {
     setSearchValue(e.target.value);
   };
-  let handleSearchClick = async (e) => {
-    console.log(searchValue);
-    //PENDING....
-  };
-
   // To store all the chats of a user
   let [chat, setChat] = useState([
     {
@@ -26,6 +24,36 @@ const chatSelector = ({ userDetails, updateChat_id }) => {
       chat_id: "",
     },
   ]);
+  // To store new users (data from the search results)
+  let [availableUsers, setAvailableUsers] = useState([
+    {
+      chatName: "",
+      latestMessage: "",
+      chat_id: "",
+    },
+  ]);
+  let handleSearchClick = async (e) => {
+    try {
+      // Search for new users to chat
+      const response = await axios.get(
+        `http://localhost:8080/api/chat/finduser/${searchValue}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        if (response.data.length > 0) {
+          setAvailableUsers(response.data);
+        } else {
+        }
+      }
+    } catch (err) {
+      alert(err.response.data.message);
+    }
+    //PENDING....
+  };
 
   let fetchChats;
   useEffect(() => {
@@ -36,7 +64,7 @@ const chatSelector = ({ userDetails, updateChat_id }) => {
         const token = localStorage.getItem("token");
         // request to server with jwt token
         let response = await axios.get(
-          `http://localhost:8080/api/chat/${userDetails.username}`,
+          `http://localhost:8080/api/chat/${user.userDetails.username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -83,6 +111,70 @@ const chatSelector = ({ userDetails, updateChat_id }) => {
           ),
         }}
       />
+      {(() => {
+        if (availableUsers.chat_id != "") {
+          if (availableUsers.length > 0) {
+            return (
+              <Box
+                sx={{
+                  border: "1px solid black",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "15px",
+                  padding: "10px",
+                }}
+              >
+                Search Results
+                {availableUsers.map((chat, index) => (
+                  <Box
+                    key={index}
+                    // onClick={() => handleClick(chat.chat_id)}
+                    sx={{
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      "&:hover": {
+                        backgroundColor: "#f0f0f0",
+                      },
+                    }}
+                  >
+                    <Box
+                      id="dp"
+                      sx={{
+                        width: "50px",
+                        height: "50px",
+                        borderRadius: "50%",
+                        border: "1px solid blue",
+                        marginRight: "8px",
+                      }}
+                    ></Box>
+                    <Box id="content" sx={{ textAlign: "left" }}>
+                      <Typography>
+                        <b>{chat.chatName}</b>
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            );
+          } else {
+            return (
+              <Box
+                sx={{
+                  border: "1px solid black",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "15px",
+                  padding: "10px",
+                }}
+              >
+                Search Results
+                <Typography>No User Found</Typography>
+              </Box>
+            );
+          }
+        }
+      })()}
       {chat.map((chat, index) => (
         <Box
           key={index}
