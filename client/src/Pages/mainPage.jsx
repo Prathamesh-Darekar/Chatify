@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import ChatArea from "../components/mainPage/chatArea";
 import ChatSelector from "../components/mainPage/chatSelector";
 import Grid from "@mui/material/Grid2";

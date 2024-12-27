@@ -18,7 +18,16 @@ function App() {
     <div>
       <Routes>
         <Route path="/" element={<User updateUser={updateUserDetails} />} />
-        <Route path="/chat" element={<Chat userDetails={userDetails} />} />
+        <Route
+          path="/chat"
+          element={
+            userDetails.userId == "" ? (
+              <Unauthorized />
+            ) : (
+              <Chat userDetails={userDetails} />
+            )
+          }
+        />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

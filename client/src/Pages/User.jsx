@@ -1,6 +1,5 @@
 import React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import Signup from "../components/User/Signup";
 import Login from "../components/User/Login";
 import { Container, Box, Tab, Tabs, Typography } from "@mui/material";
@@ -67,7 +66,6 @@ const User = (props) => {
             <Signup updateUser={props.updateUser} />
           </TabPanel>
         </Box>
-        <Link to="/chat">Chat</Link>
       </Container>
     </>
   );
