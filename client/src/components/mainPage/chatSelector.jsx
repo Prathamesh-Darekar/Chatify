@@ -25,18 +25,14 @@ const chatSelector = ({ updateChat_id }) => {
     },
   ]);
   // To store new users (data from the search results)
-  let [availableUsers, setAvailableUsers] = useState([
-    {
-      chatName: "",
-      latestMessage: "",
-      chat_id: "",
-    },
-  ]);
+  let [availableUsers, setAvailableUsers] = useState([]);
+  let [displaySearchResults, setDisplaySearchResults] = useState(false);
   let handleSearchClick = async (e) => {
+    if (!searchValue) return;
     try {
       // Search for new users to chat
       const response = await axios.get(
-        `http://localhost:8080/api/chat/finduser/${searchValue}`,
+        `http://localhost:8080/api/user/finduser/${searchValue}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,13 +42,12 @@ const chatSelector = ({ updateChat_id }) => {
       if (response.status == 200) {
         if (response.data.length > 0) {
           setAvailableUsers(response.data);
-        } else {
         }
+        setDisplaySearchResults(true);
       }
     } catch (err) {
       alert(err.response.data.message);
     }
-    //PENDING....
   };
 
   let fetchChats;
@@ -81,8 +76,13 @@ const chatSelector = ({ updateChat_id }) => {
     fetchChats();
   }, []);
 
-  let handleClick = async (chat_id) => {
+  let handleClick = (chat_id) => {
+    // CREATE CHAT
     updateChat_id(chat_id);
+  };
+
+  let handleSearchResultClick = (id) => {
+    console.log(id);
   };
 
   return (
@@ -112,23 +112,23 @@ const chatSelector = ({ updateChat_id }) => {
         }}
       />
       {(() => {
-        if (availableUsers.chat_id != "") {
+        if (displaySearchResults) {
           if (availableUsers.length > 0) {
             return (
               <Box
                 sx={{
-                  border: "1px solid black",
                   display: "flex",
+                  borderBottom: "1px solid rgba(0,0,0,0.3)",
                   flexDirection: "column",
                   gap: "15px",
-                  padding: "10px",
+                  paddingBottom: "10px",
                 }}
               >
                 Search Results
                 {availableUsers.map((chat, index) => (
                   <Box
                     key={index}
-                    // onClick={() => handleClick(chat.chat_id)}
+                    onClick={() => handleSearchResultClick(chat.user_id)}
                     sx={{
                       cursor: "pointer",
                       display: "flex",

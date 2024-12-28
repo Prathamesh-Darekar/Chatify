@@ -3,15 +3,15 @@ const router = express.Router();
 const {
   signUp,
   loginUser,
-  getAllUsers,
+  findUser,
 } = require("../controllers/UserController");
 const wrapAsync = require("../utils/wrapAsync");
+const { isAuthorized } = require("../middleware");
 
+router.route("/finduser/:username").get(isAuthorized, wrapAsync(findUser));
 // Route for user signUp
 router.post("/register", wrapAsync(signUp));
 // Route for user login
 router.post("/login", wrapAsync(loginUser));
-// Route to check data
-router.get("/getdata", wrapAsync(getAllUsers));
 
 module.exports = router;

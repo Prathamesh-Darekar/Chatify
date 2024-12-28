@@ -94,21 +94,4 @@ const getChatDetails = async (req, res) => {
   return res.status(200).json(response);
 };
 
-const findUser = async (req, res) => {
-  const name = req.params.username;
-  let arr = [];
-  if (!name) return res.status(409).json({ message: "Please enter name" });
-  const availableUsers = await User.find({
-    username: { $regex: new RegExp(`${name}`, "i") },
-  });
-  for (let user of availableUsers) {
-    let newObj = {
-      chat_id: user._id,
-      latestMessage: "",
-      chatName: user.username,
-    };
-    arr.push(newObj);
-  }
-  return res.json(arr);
-};
-module.exports = { accessChat, showChats, getChatDetails, findUser };
+module.exports = { accessChat, showChats, getChatDetails };

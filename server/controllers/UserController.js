@@ -1,7 +1,8 @@
-const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const env = require("dotenv").config();
+const Chat = require("../models/Chat");
+const User = require("../models/User");
+const Message = require("../models/Message");
 
 const signUp = async (req, res) => {
   const { username, password } = req.body;
@@ -77,10 +78,21 @@ const loginUser = async (req, res) => {
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
-//PENDING...
-const getAllUsers = async (req, res) => {
-  let data = await User.find().populate("chats");
-  return res.json(data);
+const findUser = async (req, res) => {
+  const name = req.params.username;
+  let arr = [];
+  if (!name) return res.status(409).json({ message: "Please enter name" });
+  const availableUsers = await User.find({
+    username: { $regex: new RegExp(`${name}`, "i") },
+  });
+  for (let user of availableUsers) {
+    let newObj = {
+      user_id: user._id,
+      chatName: user.username,
+    };
+    arr.push(newObj);
+  }
+  return res.json(arr);
 };
 
-module.exports = { signUp, loginUser, getAllUsers };
+module.exports = { signUp, loginUser, findUser };

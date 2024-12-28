@@ -15,7 +15,7 @@ function App() {
         <Route path="/" element={<User />} />
         <Route
           path="/chat"
-          element={user.userDetails.userId == "" ? <Unauthorized /> : <Chat />}
+          element={!user.userDetails ? <Unauthorized /> : <Chat />}
         />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
