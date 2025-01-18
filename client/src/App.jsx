@@ -9,14 +9,15 @@ import { userContext } from "./Context/UserState";
 
 function App() {
   let user = useContext(userContext);
+  console.log("hi from app.jsx");
   return (
     <div>
       <Routes>
-        <Route path="/" element={<User />} />
         <Route
           path="/chat"
           element={!user.userDetails ? <Unauthorized /> : <Chat />}
         />
+        <Route path="/" element={<User />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>

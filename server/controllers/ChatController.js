@@ -77,20 +77,22 @@ const getChatDetails = async (req, res) => {
       .json({ message: "Please provide chat_id and username" });
   let chatDetails = await Chat.findById(chat_id).populate("messages");
   if (!chatDetails) return res.status(404).json({ message: "Invalid chat id" });
-  let chatName;
+  let chatName, user2Id;
   if (chatDetails.isGroupChat) {
     chatName = chatDetails.chatName;
   } else {
     let name = await User.findById(chatDetails.users[0], "-password");
     if (name.username != username) {
       chatName = name.username;
+      user2Id = chatDetails.users[0];
     } else {
       let name2 = await User.findById(chatDetails.users[1], "-password");
       chatName = name2.username;
+      user2Id = chatDetails.users[1];
     }
   }
   let chatMessages = chatDetails.messages;
-  let response = { chatMessages, chatName };
+  let response = { chatMessages, chatName, user2Id };
   return res.status(200).json(response);
 };
 

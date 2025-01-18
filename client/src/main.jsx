@@ -8,11 +8,14 @@ import "@fontsource/roboto/700.css";
 import App from "./App.jsx";
 import "./index.css";
 import { UserState } from "./Context/UserState.jsx";
+import { SocketState } from "./Context/SocketState.jsx";
 
 createRoot(document.getElementById("root")).render(
   <UserState>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <SocketState>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </SocketState>
   </UserState>
 );

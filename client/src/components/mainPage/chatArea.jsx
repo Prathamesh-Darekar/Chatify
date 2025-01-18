@@ -1,13 +1,15 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { Box, TextField, Typography } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import axios from "axios";
 import { userContext } from "../../Context/UserState";
+import { socketContext } from "../../Context/SocketState";
 
 const chatArea = ({ chat_id }) => {
   let user = useContext(userContext);
+  let socket = useContext(socketContext);
   // stores the value entered in the textfield of chatarea
   let [newMessage, setNewMessage] = useState("");
   // to store all the mesages of a chat
@@ -30,6 +32,7 @@ const chatArea = ({ chat_id }) => {
         if (response.status == 200) {
           setUserChats(response.data.chatMessages);
           setChatName(response.data.chatName);
+          socket.updateRoomId(response.data.user2Id);
         }
       } catch (err) {
         console.log("Error in chatArea.jsx");
@@ -39,9 +42,25 @@ const chatArea = ({ chat_id }) => {
     if (chat_id) getChatMessages();
   }, [chat_id]);
 
-  const handleSendMessage = (event) => {
+  const handleSendMessage = () => {
     // PENDING...
+    if (chat_id)
+      socket.socket.emit("one-on-one", {
+        userId: socket.roomId,
+        msg: newMessage,
+      });
   };
+
+  useEffect(() => {
+    socket.socket.on("message", (data) => {
+      let obj = {
+        content: data,
+        sender: 0,
+      };
+      setUserChats((prevArray) => [...prevArray, obj]);
+      console.log(data);
+    });
+  }, []);
 
   const handleChange = (event) => {
     setNewMessage(event.target.value);
