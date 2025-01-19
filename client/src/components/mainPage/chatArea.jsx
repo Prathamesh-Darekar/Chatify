@@ -42,13 +42,44 @@ const chatArea = ({ chat_id }) => {
     if (chat_id) getChatMessages();
   }, [chat_id]);
 
+  // function to call an api to store new message into database
+  const storeMessage = async (s_id, content, c_id) => {
+    try {
+      // get the jwt token from local sotrage
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "http://localhost:8080/api/message/new",
+        {
+          senderId: s_id,
+          msg: content,
+          chatId: c_id,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log(response.data);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const handleSendMessage = () => {
     // PENDING...
-    if (chat_id)
+    if (chat_id && newMessage != "") {
       socket.socket.emit("one-on-one", {
         userId: socket.roomId,
         msg: newMessage,
       });
+      let obj = {
+        content: newMessage,
+        sender: user.userDetails.userId,
+      };
+      setUserChats((prevArray) => [...prevArray, obj]);
+      storeMessage(user.userDetails.userId, newMessage, chat_id);
+    }
   };
 
   useEffect(() => {
@@ -58,7 +89,6 @@ const chatArea = ({ chat_id }) => {
         sender: 0,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
-      console.log(data);
     });
   }, []);
 

@@ -13,6 +13,7 @@ const mongoose = require("mongoose");
 const env = require("dotenv");
 const userRouter = require("./Routes/UserRouter");
 const chatRouter = require("./Routes/chatRouter");
+const messageRouter = require("./Routes/MessageRouter");
 
 // configuring dotenv
 env.config();
@@ -31,7 +32,7 @@ mongoose
 
 // WEB-SOCKET
 function removeObject(array, value) {
-  return array.filter((obj) => obj.socketid !== value);
+  return array.filter((obj) => obj.socketId !== value);
 }
 let socketInfo = [];
 io.on("connection", (socket) => {
@@ -42,6 +43,7 @@ io.on("connection", (socket) => {
       socketId: socket.id,
     };
     socketInfo.push(socketObj);
+    console.log(socketInfo);
   });
   socket.on("one-on-one", ({ msg, userId }) => {
     const result = socketInfo.find((obj) => obj.userId === userId);
@@ -52,7 +54,8 @@ io.on("connection", (socket) => {
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
-    removeObject(socketInfo, socket.id);
+    socketInfo = removeObject(socketInfo, socket.id);
+    console.log(socketInfo);
   });
 });
 
@@ -60,6 +63,8 @@ io.on("connection", (socket) => {
 app.use("/api/user", userRouter);
 // Routes related to Chat
 app.use("/api/chat", chatRouter);
+// Routes related to message
+app.use("/api/message", messageRouter);
 
 app.get("/", (req, res) => {
   res.send("Server online");
@@ -67,8 +72,9 @@ app.get("/", (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  let { status = "500", message = "Something went wrong" } = err;
+  let { status = 500, message = "Something went wrong" } = err;
   console.log("This is error handling middleware");
+  console.log(err);
   return res.status(status).json({ message });
 });
 
