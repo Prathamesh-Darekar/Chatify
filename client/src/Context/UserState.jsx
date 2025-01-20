@@ -3,6 +3,7 @@ const userContext = createContext();
 
 const UserState = (props) => {
   let [userDetails, setUserDetails] = useState(null);
+  const serverUrl = "http://localhost:8080";
 
   useEffect(() => {
     if (!userDetails) {
@@ -19,7 +20,7 @@ const UserState = (props) => {
   };
 
   return (
-    <userContext.Provider value={{ userDetails, updateUserDetails }}>
+    <userContext.Provider value={{ userDetails, updateUserDetails, serverUrl }}>
       {props.children}
     </userContext.Provider>
   );

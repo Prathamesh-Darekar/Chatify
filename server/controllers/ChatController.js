@@ -60,7 +60,7 @@ const showChats = async (req, res) => {
     }
     let newObj = {
       chat_id: chatData._id,
-      latestMessage: data.latestMessage.content,
+      latestMessage: data.latestMessage ? data.latestMessage.content : "",
       chatName: chatname,
     };
     arr.push(newObj);
@@ -96,4 +96,20 @@ const getChatDetails = async (req, res) => {
   return res.status(200).json(response);
 };
 
-module.exports = { accessChat, showChats, getChatDetails };
+const createChat = async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(409).json("Bad Request");
+  let newChat = new Chat({
+    chatName: "Private Chat",
+    isGroupChat: false,
+    users: [req.user._id, userId],
+    laestMessage: "",
+    groupAdmin: [],
+    messages: [],
+  });
+  await newChat.save();
+  await User.findByIdAndUpdate(req.user._id, { $push: { chats: newChat._id } });
+  await User.findByIdAndUpdate(userId, { $push: { chats: newChat._id } });
+  return res.status(200).json("success");
+};
+module.exports = { accessChat, showChats, getChatDetails, createChat };

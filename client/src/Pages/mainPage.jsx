@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
 import ChatArea from "../components/mainPage/chatArea";
+import LandingPage from "../components/mainPage/LandingPage";
 import ChatSelector from "../components/mainPage/chatSelector";
 import Grid from "@mui/material/Grid2";
 import { styled } from "@mui/material/styles";
@@ -57,7 +58,7 @@ const mainPage = () => {
               height: "90vh",
             }}
           >
-            <ChatArea chat_id={chat_id} />
+            {chat_id == "" ? <LandingPage /> : <ChatArea chat_id={chat_id} />}
           </Item>
         </Grid>
       </Grid>

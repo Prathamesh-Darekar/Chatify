@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const { getChatDetails, showChats } = require("../controllers/ChatController");
+const {
+  getChatDetails,
+  showChats,
+  createChat,
+} = require("../controllers/ChatController");
 const wrapAsync = require("../utils/wrapAsync");
 const { isAuthorized } = require("../middleware");
 
+router.route("/new").post(isAuthorized, wrapAsync(createChat));
 router
   .route("/:username/:chat_id")
   .get(isAuthorized, wrapAsync(getChatDetails));

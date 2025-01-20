@@ -74,7 +74,7 @@ const loginUser = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
-  console.log(token);
+  console.log("Logging from userCotroller-loginUser ", token);
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 

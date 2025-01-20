@@ -31,8 +31,9 @@ const chatSelector = ({ updateChat_id }) => {
     if (!searchValue) return;
     try {
       // Search for new users to chat
+      console.log(user.serverUrl);
       const response = await axios.get(
-        `http://localhost:8080/api/user/finduser/${searchValue}`,
+        `${user.serverUrl}/api/user/finduser/${searchValue}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -59,7 +60,7 @@ const chatSelector = ({ updateChat_id }) => {
         const token = localStorage.getItem("token");
         // request to server with jwt token
         let response = await axios.get(
-          `http://localhost:8080/api/chat/${user.userDetails.username}`,
+          `${user.serverUrl}/api/chat/${user.userDetails.username}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -81,8 +82,25 @@ const chatSelector = ({ updateChat_id }) => {
     updateChat_id(chat_id);
   };
 
-  let handleSearchResultClick = (id) => {
+  let handleSearchResultClick = async (id) => {
     console.log(id);
+    const userId = id;
+    try {
+      const response = await axios.post(
+        `${user.serverUrl}/api/chat/new`,
+        {
+          userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status == 200) setDisplaySearchResults(false);
+    } catch (e) {
+      console.log("Error in chatSelector-handleSearchResultClick  ", e);
+    }
   };
 
   return (
@@ -125,6 +143,12 @@ const chatSelector = ({ updateChat_id }) => {
                 }}
               >
                 Search Results
+                <Box
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => setDisplaySearchResults(false)}
+                >
+                  X
+                </Box>
                 {availableUsers.map((chat, index) => (
                   <Box
                     key={index}

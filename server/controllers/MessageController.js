@@ -17,7 +17,28 @@ const createMessage = async (req, res) => {
     $push: { messages: newMessage._id },
     latestMessage: newMessage._id,
   });
+  res.status(200).json({ msg: "success", msgId: newMessage._id });
+};
+
+const deleteMessage = async (req, res) => {
+  const { msgId, chatId } = req.body;
+  if (!msgId) return res.status(409).json({ msg: "bad request" });
+  await Chat.findByIdAndUpdate(
+    chatId,
+    { $pull: { messages: msgId } },
+    { new: true }
+  ).then(async (updatedChat) => {
+    if (updatedChat.messages.length > 0) {
+      updatedChat.latestMessage =
+        updatedChat.messages[updatedChat.messages.length - 1];
+      await updatedChat.save();
+    } else {
+      updatedChat.latestMessage = null;
+      await updatedChat.save();
+    }
+  });
+  await Message.findByIdAndDelete(msgId);
   res.status(200).json("success");
 };
 
-module.exports = { createMessage };
+module.exports = { createMessage, deleteMessage };

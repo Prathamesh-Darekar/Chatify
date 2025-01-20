@@ -6,6 +6,7 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import axios from "axios";
 import { userContext } from "../../Context/UserState";
 import { socketContext } from "../../Context/SocketState";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 
 const chatArea = ({ chat_id }) => {
   let user = useContext(userContext);
@@ -15,6 +16,7 @@ const chatArea = ({ chat_id }) => {
   // to store all the mesages of a chat
   let [userChats, setUserChats] = useState([]);
   let [chatName, setChatName] = useState("");
+
   useEffect(() => {
     let getChatMessages = async () => {
       try {
@@ -60,15 +62,15 @@ const chatArea = ({ chat_id }) => {
           },
         }
       );
-      console.log(response.data);
+      return response.data.msgId;
     } catch (e) {
       console.log(e);
     }
   };
 
   const handleSendMessage = () => {
-    // PENDING...
     if (chat_id && newMessage != "") {
+      let msgId = storeMessage(user.userDetails.userId, newMessage, chat_id);
       socket.socket.emit("one-on-one", {
         userId: socket.roomId,
         msg: newMessage,
@@ -76,9 +78,9 @@ const chatArea = ({ chat_id }) => {
       let obj = {
         content: newMessage,
         sender: user.userDetails.userId,
+        msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
-      storeMessage(user.userDetails.userId, newMessage, chat_id);
     }
   };
 
@@ -94,6 +96,35 @@ const chatArea = ({ chat_id }) => {
 
   const handleChange = (event) => {
     setNewMessage(event.target.value);
+  };
+
+  // Delete a message
+  const handleMessageDelete = async (msgId) => {
+    // -------------------------------------------------------------------
+    try {
+      // get the jwt token from local sotrage
+      const token = localStorage.getItem("token");
+      const response = await axios.delete(
+        `${user.serverUrl}/api/message/delete`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: {
+            msgId,
+            chatId: chat_id,
+          },
+        }
+      );
+      if (response.status == 200) {
+        let newChatsArray = userChats.filter((message) => {
+          return message._id != msgId;
+        });
+        setUserChats(newChatsArray);
+      }
+    } catch (e) {
+      console.log("Error in handleMessageDelete in ChatArea.jsx");
+    }
   };
 
   return (
@@ -157,21 +188,35 @@ const chatArea = ({ chat_id }) => {
             height: "24rem",
           }}
         >
-          {userChats.map((User, index) => (
+          {/* swap index with msgId later */}
+          {userChats.map((message, index) => (
             <Box
-              key={index}
               sx={{
-                backgroundColor: "#015D4B",
-                color: "#fff",
+                display: "flex",
+                alignItems: "center",
                 alignSelf:
-                  User.sender == user.userDetails.userId
+                  message.sender == user.userDetails.userId
                     ? "flex-end"
                     : "flex-start",
-                padding: "10px 20px",
-                borderRadius: "20px",
               }}
             >
-              <Typography sx={{ fontSize: "14px" }}>{User.content}</Typography>
+              <Box
+                key={index}
+                sx={{
+                  backgroundColor: "#015D4B",
+                  color: "#fff",
+                  padding: "10px 20px",
+                  borderRadius: "20px",
+                }}
+              >
+                <Typography sx={{ fontSize: "14px" }}>
+                  {message.content}
+                </Typography>
+              </Box>
+              <DeleteRoundedIcon
+                fontSize="small"
+                onClick={() => handleMessageDelete(message._id)}
+              />
             </Box>
           ))}
         </Box>

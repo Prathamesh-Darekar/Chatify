@@ -5,6 +5,7 @@ import User from "./Pages/User";
 import Chat from "./Pages/mainPage";
 import PageNotFound from "./Pages/PageNotFound";
 import Unauthorized from "./Pages/Unauthorized";
+import LandingPage from "./components/mainPage/LandingPage";
 import { userContext } from "./Context/UserState";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           path="/chat"
           element={!user.userDetails ? <Unauthorized /> : <Chat />}
         />
+        <Route path="/test" element={<LandingPage />} />
         <Route path="/" element={<User />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>
