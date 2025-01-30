@@ -95,4 +95,13 @@ const findUser = async (req, res) => {
   return res.json(arr);
 };
 
-module.exports = { signUp, loginUser, findUser };
+const getAllUsers = async (req, res) => {
+  let allUsers = await User.find(
+    { _id: { $ne: req.user._id } },
+    { username: 1 }
+  );
+  if (!allUsers) return res.status(500).json(allUsers);
+  else res.status(200).json(allUsers);
+};
+
+module.exports = { signUp, loginUser, findUser, getAllUsers };

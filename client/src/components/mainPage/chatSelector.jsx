@@ -6,6 +6,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
 const chatSelector = ({ updateChat_id }) => {
   let user = useContext(userContext);
@@ -102,7 +103,9 @@ const chatSelector = ({ updateChat_id }) => {
       console.log("Error in chatSelector-handleSearchResultClick  ", e);
     }
   };
-
+  const handleCreateGroup = () => {
+    console.log("Code to create a group");
+  };
   return (
     <div
       style={{
@@ -112,23 +115,32 @@ const chatSelector = ({ updateChat_id }) => {
         gap: "20px",
       }}
     >
-      <TextField
-        variant="outlined"
-        placeholder="Search..."
-        name="searchResult"
-        value={searchValue}
-        onChange={handleChange}
-        fullWidth
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton onClick={handleSearchClick}>
-                <SearchIcon />
-              </IconButton>
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <TextField
+          variant="outlined"
+          placeholder="Search..."
+          name="searchResult"
+          value={searchValue}
+          onChange={handleChange}
+          fullWidth
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={handleSearchClick}>
+                  <SearchIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+        <Box>
+          <GroupAddIcon
+            fontSize="large"
+            sx={{ cursor: "pointer" }}
+            onClick={handleCreateGroup}
+          />
+        </Box>
+      </Box>
       {(() => {
         if (displaySearchResults) {
           if (availableUsers.length > 0) {

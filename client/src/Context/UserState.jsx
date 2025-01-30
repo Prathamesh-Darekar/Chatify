@@ -1,18 +1,13 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState } from "react";
 const userContext = createContext();
 
 const UserState = (props) => {
-  let [userDetails, setUserDetails] = useState(null);
-  const serverUrl = "http://localhost:8080";
+  console.log(localStorage.getItem("user"));
+  let [userDetails, setUserDetails] = useState(
+    JSON.parse(localStorage.getItem("user"))
+  );
 
-  useEffect(() => {
-    if (!userDetails) {
-      let user = JSON.parse(localStorage.getItem("user"));
-      if (user) {
-        setUserDetails(user);
-      }
-    }
-  }, []);
+  const serverUrl = "http://localhost:8080";
 
   let updateUserDetails = (obj) => {
     setUserDetails(obj);

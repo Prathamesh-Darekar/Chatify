@@ -14,6 +14,7 @@ const env = require("dotenv");
 const userRouter = require("./Routes/UserRouter");
 const chatRouter = require("./Routes/chatRouter");
 const messageRouter = require("./Routes/MessageRouter");
+const groupChatRouter = require("./Routes/groupChatRouter");
 
 // configuring dotenv
 env.config();
@@ -34,6 +35,7 @@ mongoose
 function removeObject(array, value) {
   return array.filter((obj) => obj.socketId !== value);
 }
+
 let socketInfo = [];
 io.on("connection", (socket) => {
   console.log(`user connected with id : ${socket.id}`);
@@ -65,6 +67,8 @@ app.use("/api/user", userRouter);
 app.use("/api/chat", chatRouter);
 // Routes related to message
 app.use("/api/message", messageRouter);
+// ROutes related to groups
+app.use("/api/groupchat", groupChatRouter);
 
 app.get("/", (req, res) => {
   res.send("Server online");

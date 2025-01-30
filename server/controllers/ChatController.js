@@ -112,4 +112,5 @@ const createChat = async (req, res) => {
   await User.findByIdAndUpdate(userId, { $push: { chats: newChat._id } });
   return res.status(200).json("success");
 };
+
 module.exports = { accessChat, showChats, getChatDetails, createChat };

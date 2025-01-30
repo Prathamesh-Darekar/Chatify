@@ -60,20 +60,6 @@ const LandingPage = () => {
             </Box>
           </Grid>
         </Grid>
-
-        <Button
-          variant="contained"
-          size="large"
-          sx={{
-            mt: 5,
-            backgroundColor: "#1e88e5",
-            "&:hover": {
-              backgroundColor: "#1565c0",
-            },
-          }}
-        >
-          Get Started
-        </Button>
       </Container>
     </Box>
   );

@@ -39,14 +39,16 @@ const mainPage = () => {
         container
         spacing={1}
         sx={{
-          padding: "10px",
+          padding: "5px",
           width: "100vw",
+          minHeight: "100vh",
         }}
       >
         <Grid size={3}>
           <Item
             sx={{
-              height: "90vh",
+              height: "95vh",
+              overflowY: "scroll",
             }}
           >
             <ChatSelector updateChat_id={updateChat_id} />
@@ -55,7 +57,7 @@ const mainPage = () => {
         <Grid size={9}>
           <Item
             sx={{
-              height: "90vh",
+              height: "95vh",
             }}
           >
             {chat_id == "" ? <LandingPage /> : <ChatArea chat_id={chat_id} />}

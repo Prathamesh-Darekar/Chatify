@@ -11,6 +11,10 @@ const chatSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  logo: {
+    type: String,
+    default: "https://images.app.goo.gl/UGf4WrmaiQtraA5YA",
+  },
   users: [
     {
       type: Schema.Types.ObjectId,
