@@ -1,9 +1,15 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 
+// Pending to add logo
 const createGroupChat = async (req, res) => {
-  const { groupName, participants, groupLogo } = req.body;
+  let { groupName, participants, groupLogo } = req.body;
   if (!groupName || !participants) return res.status(409).json("bad request");
+  participants = participants.map((user) => {
+    return user._id;
+  });
+  participants.push(req.user._id);
+  console.log(participants);
   const newgroupChat = new Chat({
     chatName: groupName,
     isGroupChat: true,
@@ -19,7 +25,7 @@ const createGroupChat = async (req, res) => {
       });
     });
   }
-  return res.status(200).json("success");
+  return res.status(200).json(participants);
 };
 
 module.exports = { createGroupChat };

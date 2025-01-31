@@ -18,7 +18,7 @@ function App() {
           path="/chat"
           element={!user.userDetails ? <Unauthorized /> : <Chat />}
         />
-        <Route path="/test" element={<GroupForm />} />
+        <Route path="/creategroup" element={<GroupForm />} />
         <Route path="/" element={<User />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>

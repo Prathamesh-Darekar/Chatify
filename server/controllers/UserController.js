@@ -96,6 +96,7 @@ const findUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
+  console.log("hi");
   let allUsers = await User.find(
     { _id: { $ne: req.user._id } },
     { username: 1 }

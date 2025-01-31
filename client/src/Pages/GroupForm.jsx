@@ -1,39 +1,48 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import axios from "axios";
 import {
   TextField,
   Button,
-  InputAdornment,
-  Box,
+  Container,
   Typography,
-  FormControl,
-  Autocomplete,
+  Grid,
   Avatar,
+  IconButton,
   Chip,
+  Autocomplete,
 } from "@mui/material";
+import { PhotoCamera, Close } from "@mui/icons-material";
 import { userContext } from "../Context/UserState";
-import { Add } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 
-const GroupForm = () => {
-  const user = useContext(userContext);
+// CreateGroup Component
+const CreateGroup = () => {
+  // State to manage form inputs
   const [groupName, setGroupName] = useState("");
-  const [groupIcon, setGroupIcon] = useState("");
-  const [participants, setParticipants] = useState([]);
-  const [participantInput, setParticipantInput] = useState("");
-  const [allUsers, setAllUsers] = useState([]);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const [groupIcon, setGroupIcon] = useState(null);
+  const [allUsers, setAllUsers] = useState(null);
+  const navigate = useNavigate();
+  useEffect(() => {
+    console.log(allUsers);
+  }, [allUsers]);
 
+  // API call to get all available users
+  const user = useContext(userContext);
   useEffect(() => {
     const getUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(`${user.serverUrl}/api/user/getuser`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        console.log(response);
+        const response = await axios.get(
+          `http://localhost:8080/api/user/getuser`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (response && response.status == 200) {
           setAllUsers(response.data);
-          console.log(response.data);
         }
       } catch (e) {
         console.log("Error in GroupForm component", e);
@@ -42,118 +51,168 @@ const GroupForm = () => {
     getUser();
   }, []);
 
-  const handleAddParticipant = () => {
-    if (
-      participantInput.trim() !== "" &&
-      allUsers.some((user) => user.username === participantInput)
-    ) {
-      setParticipants([...participants, participantInput]);
-      setParticipantInput("");
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // Perform form submission logic here
+    console.log("Group Name:", groupName);
+    console.log("Participants:", selectedParticipants);
+    console.log("Group Icon:", groupIcon);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:8080/api/groupchat/new`,
+        {
+          groupName,
+          participants: selectedParticipants,
+          groupLogo: groupIcon,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        navigate("/chat");
+        alert("Group created successfully..!!");
+      }
+    } catch (e) {
+      console.log("Error in group create Form");
+      alert("Error check the console");
     }
   };
 
-  const handleRemoveParticipant = (index) => {
-    setParticipants(participants.filter((_, i) => i !== index));
+  // Handle file upload for group icon
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setGroupIcon(URL.createObjectURL(file));
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle form submission
-    console.log({ groupName, groupIcon, participants });
+  // Handle participant selection
+  const handleParticipantChange = (event, value) => {
+    setSelectedParticipants(value);
+  };
+
+  // Handle removing a participant
+  const handleRemoveParticipant = (participantToRemove) => {
+    setSelectedParticipants((prev) =>
+      prev.filter((participant) => participant.id !== participantToRemove.id)
+    );
+  };
+
+  // Handle removing the group icon
+  const handleRemoveIcon = () => {
+    setGroupIcon(null);
   };
 
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        maxWidth: 500,
-        margin: "auto",
-        mt: 4,
-      }}
-    >
-      <Typography variant="h4" textAlign="center" color="primary">
-        Create Group
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Typography variant="h4" align="center" gutterBottom>
+        Create New Group
       </Typography>
-      <TextField
-        label="Group Name"
-        variant="outlined"
-        value={groupName}
-        onChange={(e) => setGroupName(e.target.value)}
-        fullWidth
-        required
-        color="secondary"
-      />
-      <TextField
-        label="Group Icon URL"
-        variant="outlined"
-        value={groupIcon}
-        onChange={(e) => setGroupIcon(e.target.value)}
-        fullWidth
-        required
-        color="secondary"
-      />
-      <FormControl fullWidth margin="normal">
-        <Autocomplete
-          options={allUsers.map((user) => user.username)}
-          value={participantInput}
-          onChange={(event, newValue) => setParticipantInput(newValue)}
-          renderInput={(params) => (
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          {/* Group Name Field */}
+          <Grid item xs={12}>
             <TextField
-              label="Add Participant"
-              variant="outlined"
-              value={participantInput}
-              onChange={(e) => setParticipantInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddParticipant();
-                }
-              }}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end" sx={{ alignItems: "center" }}>
-                    <Button
-                      onClick={handleAddParticipant}
-                      variant="contained"
-                      color="primary"
-                      size="small" // Adjust size for better alignment
-                      sx={{
-                        height: "100%", // Ensure it matches the height of the TextField
-                        textTransform: "none",
-                      }}
-                    >
-                      Add
-                    </Button>
-                  </InputAdornment>
-                ),
-              }}
               fullWidth
-              margin="normal"
-              color="secondary"
+              label="Group Name"
+              variant="outlined"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              required
             />
-          )}
-        />
-      </FormControl>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-        {participants.map((participant, index) => (
-          <Chip
-            key={index}
-            label={participant}
-            onDelete={() => handleRemoveParticipant(index)}
-            color="primary"
-            avatar={<Avatar>{participant[0].toUpperCase()}</Avatar>}
-          />
-        ))}
-      </Box>
-      <Button type="submit" variant="contained" color="primary" fullWidth>
-        Submit
-      </Button>
-    </Box>
+          </Grid>
+
+          {/* Group Participants Field */}
+          <Grid item xs={12}>
+            {(() => {
+              if (allUsers) {
+                return (
+                  <Autocomplete
+                    multiple
+                    options={allUsers}
+                    getOptionLabel={(option) => `${option.username}`}
+                    value={selectedParticipants}
+                    onChange={handleParticipantChange}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Participants"
+                        placeholder="Select participants"
+                      />
+                    )}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          key={option._id}
+                          label={`${option.username}`}
+                          onDelete={() => handleRemoveParticipant(option)}
+                          deleteIcon={<Close />}
+                          {...getTagProps({ index })}
+                        />
+                      ))
+                    }
+                  />
+                );
+              }
+            })()}
+          </Grid>
+
+          {/* Group Icon Upload */}
+          <Grid item xs={12} sx={{ display: "flex", alignItems: "center" }}>
+            <input
+              accept="image/*"
+              style={{ display: "none" }}
+              id="icon-upload"
+              type="file"
+              onChange={handleFileChange}
+            />
+            <label htmlFor="icon-upload">
+              <IconButton color="primary" component="span">
+                <PhotoCamera />
+              </IconButton>
+            </label>
+            <Typography variant="body1" sx={{ ml: 2 }}>
+              {groupIcon ? "Icon Uploaded" : "Upload Group Icon"}
+            </Typography>
+            {groupIcon && (
+              <>
+                <Avatar
+                  src={groupIcon}
+                  alt="Group Icon"
+                  sx={{ ml: 2, width: 56, height: 56 }}
+                />
+                <IconButton
+                  color="error"
+                  onClick={handleRemoveIcon}
+                  sx={{ ml: 1 }}
+                >
+                  <Close />
+                </IconButton>
+              </>
+            )}
+          </Grid>
+
+          {/* Submit Button */}
+          <Grid item xs={12}>
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              type="submit"
+              size="large"
+            >
+              Create Group
+            </Button>
+          </Grid>
+        </Grid>
+      </form>
+    </Container>
   );
 };
 
-export default GroupForm;
+export default CreateGroup;

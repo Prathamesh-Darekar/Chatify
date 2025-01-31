@@ -104,7 +104,7 @@ const chatSelector = ({ updateChat_id }) => {
     }
   };
   const handleCreateGroup = () => {
-    console.log("Code to create a group");
+    navigate("/creategroup");
   };
   return (
     <div
