@@ -55,9 +55,6 @@ const CreateGroup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Perform form submission logic here
-    console.log("Group Name:", groupName);
-    console.log("Participants:", selectedParticipants);
-    console.log("Group Icon:", groupIcon);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
@@ -84,11 +81,18 @@ const CreateGroup = () => {
   };
 
   // Handle file upload for group icon
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setGroupIcon(URL.createObjectURL(file));
-    }
+    if (!file) return;
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "Chatify");
+    formData.append("cloud_name", "prathamesh19");
+    const res = await axios.post(
+      `https://api.cloudinary.com/v1_1/prathamesh19/image/upload`,
+      formData
+    );
+    if (res.status == 200) setGroupIcon(res.data.url);
   };
 
   // Handle participant selection

@@ -62,6 +62,7 @@ const showChats = async (req, res) => {
       chat_id: chatData._id,
       latestMessage: data.latestMessage ? data.latestMessage.content : "",
       chatName: chatname,
+      logo: data.logo,
     };
     arr.push(newObj);
   }
@@ -92,7 +93,13 @@ const getChatDetails = async (req, res) => {
     }
   }
   let chatMessages = chatDetails.messages;
-  let response = { chatMessages, chatName, user2Id };
+  let response = {
+    chatMessages,
+    chatName,
+    user2Id,
+    groupChat: chatDetails.isGroupChat,
+    logo: chatDetails.logo,
+  };
   return res.status(200).json(response);
 };
 

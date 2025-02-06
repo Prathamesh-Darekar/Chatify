@@ -6,45 +6,33 @@ import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
-import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const chatSelector = ({ updateChat_id }) => {
-  let user = useContext(userContext);
+const ChatSelector = ({ updateChat_id }) => {
+  const user = useContext(userContext);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
-  // to store the search value
-  let [searchValue, setSearchValue] = useState("");
-  let handleChange = (e) => {
-    setSearchValue(e.target.value);
-  };
-  // To store all the chats of a user
-  let [chat, setChat] = useState([
-    {
-      chatName: "",
-      latestMessage: "",
-      chat_id: "",
-    },
+  const [searchValue, setSearchValue] = useState("");
+  const [showOption, setShowOption] = useState(false);
+  const [chat, setChat] = useState([
+    { chatName: "", latestMessage: "", chat_id: "", logo: "" },
   ]);
-  // To store new users (data from the search results)
-  let [availableUsers, setAvailableUsers] = useState([]);
-  let [displaySearchResults, setDisplaySearchResults] = useState(false);
-  let handleSearchClick = async (e) => {
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [displaySearchResults, setDisplaySearchResults] = useState(false);
+
+  const handleChange = (e) => setSearchValue(e.target.value);
+
+  const handleSearchClick = async () => {
     if (!searchValue) return;
     try {
-      // Search for new users to chat
-      console.log(user.serverUrl);
       const response = await axios.get(
         `${user.serverUrl}/api/user/finduser/${searchValue}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (response.status == 200) {
-        if (response.data.length > 0) {
-          setAvailableUsers(response.data);
-        }
+      if (response.status === 200) {
+        if (response.data.length > 0) setAvailableUsers(response.data);
         setDisplaySearchResults(true);
       }
     } catch (err) {
@@ -52,206 +40,255 @@ const chatSelector = ({ updateChat_id }) => {
     }
   };
 
-  let fetchChats;
+  const fetchChats = async () => {
+    try {
+      const response = await axios.get(
+        `${user.serverUrl}/api/chat/${user.userDetails.username}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (response.status === 200) setChat(response.data);
+    } catch (err) {
+      alert(err.response.data.message);
+      navigate("/");
+    }
+  };
+
   useEffect(() => {
-    // get all the messages of a chat
-    fetchChats = async () => {
-      try {
-        // get the jwt token from local sotrage
-        const token = localStorage.getItem("token");
-        // request to server with jwt token
-        let response = await axios.get(
-          `${user.serverUrl}/api/chat/${user.userDetails.username}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (response.status == 200) setChat(response.data);
-      } catch (err) {
-        console.log("Error in mainPage.jsx component");
-        alert(err.response.data.message);
-        navigate("/");
-      }
-    };
     fetchChats();
   }, []);
 
-  let handleClick = (chat_id) => {
-    // CREATE CHAT
+  const handleClick = (chat_id) => {
     updateChat_id(chat_id);
   };
 
-  let handleSearchResultClick = async (id) => {
-    console.log(id);
-    const userId = id;
+  const handleSearchResultClick = async (id) => {
     try {
       const response = await axios.post(
         `${user.serverUrl}/api/chat/new`,
+        { userId: id },
         {
-          userId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (response.status == 200) setDisplaySearchResults(false);
+      if (response.status === 200) setDisplaySearchResults(false);
     } catch (e) {
-      console.log("Error in chatSelector-handleSearchResultClick  ", e);
+      console.log("Error in chatSelector-handleSearchResultClick", e);
     }
   };
-  const handleCreateGroup = () => {
-    navigate("/creategroup");
+
+  const handleCreateGroup = () => navigate("/creategroup");
+  const handleShowMoreOptions = () => setShowOption(!showOption);
+  const handleLogOut = () => {
+    localStorage.clear();
+    navigate("/");
   };
+
   return (
-    <div
-      style={{
+    <Box
+      sx={{
+        // background: "#F5F5F5",
+        background: "#B3B3B3",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         gap: "20px",
+        padding: "15px",
+        width: "100%",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <Box>
+        <Typography
+          sx={{ color: "#333333", fontSize: "20px", textAlign: "center" }}
+        >
+          Welcome {user.userDetails.username}
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          color: "#333333",
+        }}
+      >
         <TextField
           variant="outlined"
           placeholder="Search..."
           name="searchResult"
           value={searchValue}
+          size="small"
           onChange={handleChange}
           fullWidth
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSearchClick}>
-                  <SearchIcon />
+                  <SearchIcon sx={{ color: "#333333" }} />
                 </IconButton>
               </InputAdornment>
             ),
           }}
+          sx={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: "5px",
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "#BDBDBD",
+              },
+            },
+            "&:hover": {
+              backgroundColor: "#F1F1F1",
+            },
+          }}
         />
-        <Box>
-          <GroupAddIcon
+        <Box sx={{ position: "relative" }}>
+          <MoreVertIcon
             fontSize="large"
-            sx={{ cursor: "pointer" }}
-            onClick={handleCreateGroup}
+            sx={{ cursor: "pointer", color: "#333333" }}
+            onClick={handleShowMoreOptions}
           />
+          <Box
+            sx={{
+              position: "absolute",
+              background: "#FFFFFF",
+              zIndex: "2",
+              right: "0",
+              borderRadius: "7px",
+              display: showOption ? "block" : "none",
+              width: "120px",
+            }}
+          >
+            <Typography
+              sx={{
+                cursor: "pointer",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": { backgroundColor: "#F1F1F1", color: "black" },
+              }}
+              onClick={handleCreateGroup}
+            >
+              New Group
+            </Typography>
+            <Typography
+              sx={{
+                cursor: "pointer",
+                padding: "10px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": { backgroundColor: "#F1F1F1", color: "black" },
+              }}
+              onClick={handleLogOut}
+            >
+              Logout
+            </Typography>
+          </Box>
         </Box>
       </Box>
-      {(() => {
-        if (displaySearchResults) {
-          if (availableUsers.length > 0) {
-            return (
+      {displaySearchResults && availableUsers.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            borderBottom: "1px solid rgba(0,0,0,0.1)",
+            flexDirection: "column",
+            gap: "15px",
+            paddingBottom: "10px",
+            backgroundColor: "#B3B3B3",
+          }}
+        >
+          <Typography sx={{ color: "#333333", fontSize: "16px" }}>
+            Search Results
+          </Typography>
+          <Box
+            sx={{ cursor: "pointer" }}
+            onClick={() => setDisplaySearchResults(false)}
+          >
+            X
+          </Box>
+          {availableUsers.map((chat, index) => (
+            <Box
+              key={index}
+              onClick={() => handleSearchResultClick(chat.user_id)}
+              sx={{
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                "&:hover": { backgroundColor: "#F1F1F1" },
+              }}
+            >
               <Box
                 sx={{
-                  display: "flex",
-                  borderBottom: "1px solid rgba(0,0,0,0.3)",
-                  flexDirection: "column",
-                  gap: "15px",
-                  paddingBottom: "10px",
+                  width: "65px",
+                  height: "65px",
+                  borderRadius: "50%",
+                  backgroundImage: `url(${chat.logo})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  marginRight: "8px",
                 }}
-              >
-                Search Results
-                <Box
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => setDisplaySearchResults(false)}
-                >
-                  X
-                </Box>
-                {availableUsers.map((chat, index) => (
-                  <Box
-                    key={index}
-                    onClick={() => handleSearchResultClick(chat.user_id)}
-                    sx={{
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      "&:hover": {
-                        backgroundColor: "#f0f0f0",
-                      },
-                    }}
-                  >
-                    <Box
-                      id="dp"
-                      sx={{
-                        width: "50px",
-                        height: "50px",
-                        borderRadius: "50%",
-                        border: "1px solid blue",
-                        marginRight: "8px",
-                      }}
-                    ></Box>
-                    <Box id="content" sx={{ textAlign: "left" }}>
-                      <Typography>
-                        <b>{chat.chatName}</b>
-                      </Typography>
-                    </Box>
-                  </Box>
-                ))}
+              />
+              <Box sx={{ textAlign: "left" }}>
+                <Typography sx={{ color: "#333333" }}>
+                  <b>{chat.chatName}</b>
+                </Typography>
               </Box>
-            );
-          } else {
-            return (
-              <Box
-                sx={{
-                  border: "1px solid black",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "15px",
-                  padding: "10px",
-                }}
-              >
-                Search Results
-                <Typography>No User Found</Typography>
-              </Box>
-            );
-          }
-        }
-      })()}
+            </Box>
+          ))}
+        </Box>
+      )}
+      {displaySearchResults && availableUsers.length === 0 && (
+        <Box
+          sx={{
+            border: "1px solid #BDBDBD",
+            display: "flex",
+            flexDirection: "column",
+            gap: "15px",
+            padding: "10px",
+            backgroundColor: "#FFFFFF",
+          }}
+        >
+          <Typography sx={{ color: "#333333" }}>Search Results</Typography>
+          <Typography sx={{ color: "gray" }}>No User Found</Typography>
+        </Box>
+      )}
       {chat.map((chat, index) => (
         <Box
           key={index}
-          id="chat"
           onClick={() => handleClick(chat.chat_id)}
           sx={{
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            "&:hover": {
-              backgroundColor: "#f0f0f0",
-            },
+            "&:hover": { backgroundColor: "#F1F1F1" },
           }}
         >
           <Box
-            id="dp"
             sx={{
-              width: "50px",
-              height: "50px",
+              width: "65px",
+              height: "65px",
               borderRadius: "50%",
-              border: "1px solid blue",
+              backgroundImage: `url(${chat.logo})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
               marginRight: "8px",
             }}
-          ></Box>
-          <Box id="content" sx={{ textAlign: "left" }}>
-            <Typography>
+          />
+          <Box sx={{ textAlign: "left" }}>
+            <Typography sx={{ color: "#333333" }}>
               <b>{chat.chatName}</b>
             </Typography>
-            <Typography
-              sx={{
-                color: "#5B6372",
-                fontSize: "12px",
-              }}
-            >
+            <Typography sx={{ color: "gray", fontSize: "12px" }}>
               {chat.latestMessage}
             </Typography>
           </Box>
         </Box>
       ))}
-    </div>
+    </Box>
   );
 };
 
-export default chatSelector;
+export default ChatSelector;

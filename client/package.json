@@ -13,6 +13,8 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
     "@mui/icons-material": "^6.1.4",
     "@mui/lab": "^6.0.0-beta.24",
     "@mui/material": "^6.1.4",
@@ -27,11 +29,14 @@
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
     "eslint": "^9.11.1",
     "eslint-plugin-react": "^7.37.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.12",
     "globals": "^15.9.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.0.3",
     "vite": "^5.4.8"
   }
 }

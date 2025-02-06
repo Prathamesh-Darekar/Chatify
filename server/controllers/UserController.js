@@ -5,8 +5,8 @@ const User = require("../models/User");
 const Message = require("../models/Message");
 
 const signUp = async (req, res) => {
-  const { username, password } = req.body;
-
+  const { username, password, imageUrl } = req.body;
+  console.log(imageUrl);
   if (!(username && password))
     return res
       .status(400)
@@ -26,6 +26,9 @@ const signUp = async (req, res) => {
     username,
     password: hashedPassword,
   });
+  if (imageUrl) {
+    newUser.dp = imageUrl;
+  }
   await newUser.save();
 
   // Checking if the user exists or not

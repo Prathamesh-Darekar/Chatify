@@ -2,24 +2,13 @@ import React, { useEffect, useState, useContext, useMemo } from "react";
 import ChatArea from "../components/mainPage/chatArea";
 import LandingPage from "../components/mainPage/LandingPage";
 import ChatSelector from "../components/mainPage/chatSelector";
-import Grid from "@mui/material/Grid2";
-import { styled } from "@mui/material/styles";
-import Paper from "@mui/material/Paper";
+import useMediaQuery from "@mui/material/useMediaQuery"; // Import useMediaQuery
 import { userContext } from "../Context/UserState";
 import { socketContext } from "../Context/SocketState";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-  ...theme.applyStyles("dark", {
-    backgroundColor: "#1A2027",
-  }),
-}));
+import { Route, Routes } from "react-router-dom";
 
 const mainPage = () => {
+  const isSmallScreen = useMediaQuery("(max-width:700px)");
   const socket = useContext(socketContext);
   const user = useContext(userContext);
   // Setting up a websocket
@@ -29,41 +18,54 @@ const mainPage = () => {
   }, []);
   // to store the chat id of the selected chat from chat selector
   let [chat_id, setChat_id] = useState("");
-
+  const [showChatArea, setShowChatArea] = useState(false);
   let updateChat_id = (id) => {
     setChat_id(id);
+    setShowChatArea(!showChatArea);
   };
   return (
-    <div>
-      <Grid
-        container
-        spacing={1}
-        sx={{
-          padding: "5px",
-          width: "100vw",
-          minHeight: "100vh",
-        }}
-      >
-        <Grid size={3}>
-          <Item
-            sx={{
-              height: "95vh",
-              overflowY: "scroll",
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        overflowX: "hidden",
+      }}
+    >
+      {!showChatArea && (
+        <div
+          style={{
+            width: isSmallScreen ? "100%" : "30%",
+            background: "#B3B3B3",
+            // height: "94vh",
+            overflowY: "scroll",
+            padding: "10px",
+          }}
+          className="scrollbar-hidden"
+        >
+          <div
+            style={{
+              fontWeight: "600",
+              fontSize: "25PX",
+              // color: "white",
+              textAlign: "center",
             }}
           >
-            <ChatSelector updateChat_id={updateChat_id} />
-          </Item>
-        </Grid>
-        <Grid size={9}>
-          <Item
-            sx={{
-              height: "95vh",
-            }}
-          >
-            {chat_id == "" ? <LandingPage /> : <ChatArea chat_id={chat_id} />}
-          </Item>
-        </Grid>
-      </Grid>
+            Chatify
+          </div>
+          <ChatSelector updateChat_id={updateChat_id} />
+        </div>
+      )}
+      {!isSmallScreen && (
+        <div style={{ width: "70%", background: "blue" }}>
+          {chat_id == "" ? <LandingPage /> : <ChatArea chat_id={chat_id} />}
+        </div>
+      )}
+      {isSmallScreen && showChatArea && (
+        <div style={{ width: "100%", background: "blue" }}>
+          {chat_id == "" ? <LandingPage /> : <ChatArea chat_id={chat_id} />}
+        </div>
+      )}
     </div>
   );
 };

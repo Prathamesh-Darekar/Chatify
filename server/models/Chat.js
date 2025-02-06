@@ -13,7 +13,8 @@ const chatSchema = new Schema({
   },
   logo: {
     type: String,
-    default: "https://images.app.goo.gl/UGf4WrmaiQtraA5YA",
+    default:
+      "http://res.cloudinary.com/prathamesh19/image/upload/v1738688808/cuwiwp0w86bk8vkeopgm.jpg",
   },
   users: [
     {

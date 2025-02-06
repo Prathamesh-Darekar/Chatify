@@ -9,7 +9,6 @@ const createGroupChat = async (req, res) => {
     return user._id;
   });
   participants.push(req.user._id);
-  console.log(participants);
   const newgroupChat = new Chat({
     chatName: groupName,
     isGroupChat: true,
@@ -17,6 +16,7 @@ const createGroupChat = async (req, res) => {
     groupAdmin: req.user._id,
     latestMessage: null,
   });
+  if (groupLogo) newgroupChat.logo = groupLogo;
   let result = await newgroupChat.save();
   if (result) {
     participants.forEach(async (userId) => {

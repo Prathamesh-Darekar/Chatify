@@ -54,6 +54,12 @@ io.on("connection", (socket) => {
       socket.to(roomId).emit("message", msg);
     }
   });
+  socket.on("join-group", ({ roomName }) => {
+    socket.join(roomName);
+  });
+  socket.on("groupChat", ({ msg, roomName }) => {
+    socket.to(roomName).emit("message", msg);
+  });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
     socketInfo = removeObject(socketInfo, socket.id);
