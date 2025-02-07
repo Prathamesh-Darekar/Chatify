@@ -1,28 +1,31 @@
-import React, { useState, useContext, useMemo } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import ChatArea from "../components/mainPage/chatArea";
 import LandingPage from "../components/mainPage/LandingPage";
 import ChatSelector from "../components/mainPage/chatSelector";
 import useMediaQuery from "@mui/material/useMediaQuery"; // Import useMediaQuery
 import { userContext } from "../Context/UserState";
 import { socketContext } from "../Context/SocketState";
-import { Route, Routes } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const mainPage = () => {
+  const navigate = useNavigate();
   const isSmallScreen = useMediaQuery("(max-width:700px)");
+  const token = localStorage.getItem("token");
   const socket = useContext(socketContext);
   const user = useContext(userContext);
   const [chat, setChat] = useState([
-    { chatName: "", latestMessage: "", chat_id: "", logo: "" },
+    {
+      chatName: "",
+      latestMessage: "",
+      chat_id: "",
+      logo: "",
+      newMessage: false,
+    },
   ]);
-  // Setting up a websocket
-  useMemo(() => {
-    console.log(socket);
-    socket.socket.emit("register", { userId: user.userDetails.userId });
-  }, []);
-  // to store the chat id of the selected chat from chat selector
-  let [chat_id, setChat_id] = useState("");
+  const [chat_id, setChat_id] = useState("");
   const [showChatArea, setShowChatArea] = useState(false);
-  let updateChat_id = (id) => {
+  const updateChat_id = (id) => {
     setChat_id(id);
     updateShowChatArea();
   };
@@ -32,6 +35,38 @@ const mainPage = () => {
   const updateChat = (data) => {
     setChat(data);
   };
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const response = await axios.get(
+          `${user.serverUrl}/api/chat/${user.userDetails.username}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (response.status === 200) setChat(response.data);
+      } catch (err) {
+        alert(err.response.data.message);
+        navigate("/");
+      }
+    };
+    fetchChats();
+  }, []);
+  useEffect(() => {
+    chat.map((obj) => {
+      socket.socket.emit("join-room", { chat_id: obj.chat_id });
+    });
+    socket.socket.on("message", (data) => {
+      let chat1 = chat.map((obj) => {
+        if (obj.chat_id == data.chat_id) {
+          obj.latestMessage = data.msg;
+          obj.newMessage = true;
+        }
+        return obj;
+      });
+      setChat(chat1);
+    });
+  }, [chat]);
   return (
     <div
       style={{
@@ -50,11 +85,7 @@ const mainPage = () => {
           }}
           className="scrollbar-hidden"
         >
-          <ChatSelector
-            updateChat_id={updateChat_id}
-            updateChat={updateChat}
-            chat={chat}
-          />
+          <ChatSelector updateChat_id={updateChat_id} chat={chat} />
         </div>
       )}
       {!showChatArea && isSmallScreen && (
@@ -67,11 +98,7 @@ const mainPage = () => {
           }}
           className="scrollbar-hidden"
         >
-          <ChatSelector
-            updateChat_id={updateChat_id}
-            updateChat={updateChat}
-            chat={chat}
-          />
+          <ChatSelector updateChat_id={updateChat_id} chat={chat} />
         </div>
       )}
       {!isSmallScreen && (
@@ -79,7 +106,7 @@ const mainPage = () => {
           {chat_id == "" ? (
             <LandingPage />
           ) : (
-            <ChatArea chat_id={chat_id} updateChat={updateChat} chat={chat} />
+            <ChatArea chat_id={chat_id} chat={chat} updateChat={updateChat} />
           )}
         </div>
       )}

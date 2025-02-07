@@ -17,9 +17,13 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   const [userChats, setUserChats] = useState([]);
   const [chatName, setChatName] = useState("");
   const [chatLogo, setChatLogo] = useState("");
-  const [isGroupChat, setIsGroupChat] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const chatContainerRef = useRef(null);
   const isSmallScreen = useMediaQuery("(max-width:700px)");
+  const chatId = useRef(chat_id);
+  useEffect(() => {
+    chatId.current = chat_id;
+  }, [chat_id]);
 
   // Function to scroll to the bottom
   const scrollToBottom = () => {
@@ -28,11 +32,25 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, []); // Runs once when the component mounts
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [userChats]);
+  }, [userChats, isTyping]);
+
+  // Typing indicator
+  setTimeout(() => {
+    if (newMessage != "") socket.socket.emit("typing", { chat_id });
+  }, [2000]);
+
+  // To remove the new message indicator when chatArea is opened
+  const removeNewMessageIndicator = () => {
+    chat = chat.map((obj) => {
+      if (obj.chat_id == chat_id) obj.newMessage = false;
+      return obj;
+    });
+    updateChat(chat);
+  };
 
   useEffect(() => {
     const getChatMessages = async () => {
@@ -50,12 +68,6 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           setUserChats(response.data.chatMessages);
           setChatName(response.data.chatName);
           setChatLogo(response.data.logo);
-          if (response.data.groupChat) {
-            socket.socket.emit("join-group", { roomName: chat_id });
-            setIsGroupChat(true);
-          } else {
-            socket.updateRoomId(response.data.user2Id);
-          }
         }
       } catch (err) {
         console.log("Error in chatArea.jsx", err);
@@ -63,6 +75,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
       }
     };
     if (chat_id) getChatMessages();
+    return () => removeNewMessageIndicator();
   }, [chat_id]);
 
   // function to call an API to store new message into database
@@ -90,45 +103,31 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
 
   const handleSendMessage = () => {
     if (chat_id && newMessage !== "") {
+      setIsTyping(false);
       const msgId = storeMessage(user.userDetails.userId, newMessage, chat_id);
-      if (isGroupChat) {
-        socket.socket.emit("groupChat", { msg: newMessage, roomName: chat_id });
-      } else {
-        socket.socket.emit("one-on-one", {
-          userId: socket.roomId,
-          msg: newMessage,
-        });
-      }
+      socket.socket.emit("chat-room", { msg: newMessage, chat_id });
       const obj = {
         content: newMessage,
         sender: user.userDetails.userId,
         msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
-      chat = chat.map((obj) => {
-        if (obj.chat_id == chat_id) {
-          obj.latestMessage = newMessage;
-        }
-        return obj;
-      });
-      updateChat(chat);
     }
   };
+  // Websocket listener
   useEffect(() => {
     socket.socket.on("message", (data) => {
-      alert("Message received");
       const obj = {
         content: data.msg,
         sender: 0,
       };
-      setUserChats((prevArray) => [...prevArray, obj]);
-      chat = chat.map((obj) => {
-        if (obj.chat_id == chat_id) {
-          obj.latestMessage = data.msg;
-        }
-        return obj;
-      });
-      updateChat(chat);
+      if (data.chat_id == chatId.current)
+        setUserChats((prevArray) => [...prevArray, obj]);
+      return () => socket.socket.off("message");
+    });
+    socket.socket.on("indicate-typing", (data) => {
+      setIsTyping(true);
+      setInterval(() => setIsTyping(false), 1000);
     });
   }, []);
 
@@ -200,9 +199,6 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         />
         <Box>
           <Typography variant="h6">{chatName}</Typography>
-          <Typography sx={{ color: "#888", fontSize: "12px" }}>
-            Online
-          </Typography>
         </Box>
       </Box>
 
@@ -256,6 +252,29 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
             </IconButton>
           </Box>
         ))}
+        {isTyping && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-start",
+              gap: "10px",
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "#E5E7EB",
+                color: "#333",
+                padding: "10px 20px",
+                borderRadius: "20px",
+                maxWidth: "75%",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                wordBreak: "break-word",
+              }}
+            >
+              <Typography variant="body2">Typing...</Typography>
+            </Box>
+          </Box>
+        )}
       </Box>
 
       {/* Message Input */}

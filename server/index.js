@@ -32,38 +32,20 @@ mongoose
   .then(() => console.log("Database Connected!"));
 
 // WEB-SOCKET
-function removeObject(array, value) {
-  return array.filter((obj) => obj.socketId !== value);
-}
 
-let socketInfo = [];
 io.on("connection", (socket) => {
   console.log(`user connected with id : ${socket.id}`);
-  socket.on("register", (data) => {
-    let socketObj = {
-      userId: data.userId,
-      socketId: socket.id,
-    };
-    socketInfo.push(socketObj);
-    console.log(socketInfo);
+  socket.on("join-room", ({ chat_id }) => {
+    socket.join(chat_id);
   });
-  socket.on("one-on-one", ({ msg, userId }) => {
-    const result = socketInfo.find((obj) => obj.userId === userId);
-    if (result != null) {
-      roomId = result.socketId;
-      socket.to(roomId).emit("message", { msg });
-    }
+  socket.on("chat-room", ({ msg, chat_id }) => {
+    socket.to(chat_id).emit("message", { msg, chat_id });
   });
-  socket.on("join-group", ({ roomName }) => {
-    socket.join(roomName);
-  });
-  socket.on("groupChat", ({ msg, roomName }) => {
-    socket.to(roomName).emit("message", { msg, roomName });
+  socket.on("typing", ({ chat_id }) => {
+    socket.to(chat_id).emit("indicate-typing", chat_id);
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
-    socketInfo = removeObject(socketInfo, socket.id);
-    console.log(socketInfo);
   });
 });
 

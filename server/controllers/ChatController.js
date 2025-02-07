@@ -63,6 +63,7 @@ const showChats = async (req, res) => {
       latestMessage: data.latestMessage ? data.latestMessage.content : "",
       chatName: chatname,
       logo: data.logo,
+      newMessage: false,
     };
     arr.push(newObj);
   }

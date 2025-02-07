@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -8,15 +8,12 @@ import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const ChatSelector = ({ updateChat_id, updateChat, chat }) => {
+const ChatSelector = ({ updateChat_id, chat }) => {
   const user = useContext(userContext);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const [showOption, setShowOption] = useState(false);
-  // const [chat, setChat] = useState([
-  //   { chatName: "", latestMessage: "", chat_id: "", logo: "" },
-  // ]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [displaySearchResults, setDisplaySearchResults] = useState(false);
 
@@ -39,25 +36,6 @@ const ChatSelector = ({ updateChat_id, updateChat, chat }) => {
       alert(err.response.data.message);
     }
   };
-
-  const fetchChats = async () => {
-    try {
-      const response = await axios.get(
-        `${user.serverUrl}/api/chat/${user.userDetails.username}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (response.status === 200) updateChat(response.data);
-    } catch (err) {
-      alert(err.response.data.message);
-      navigate("/");
-    }
-  };
-
-  useEffect(() => {
-    fetchChats();
-  }, []);
 
   const handleClick = (chat_id) => {
     updateChat_id(chat_id);
@@ -317,6 +295,7 @@ const ChatSelector = ({ updateChat_id, updateChat, chat }) => {
             padding: "10px",
             borderRadius: "8px",
             "&:hover": { backgroundColor: "#F8F9FA" },
+            position: "relative",
           }}
         >
           <Box
@@ -339,6 +318,19 @@ const ChatSelector = ({ updateChat_id, updateChat, chat }) => {
               {chat.latestMessage}
             </Typography>
           </Box>
+          {chat.newMessage && (
+            <div
+              style={{
+                position: "absolute",
+                height: "15px",
+                width: "15px",
+                borderRadius: "50%",
+                background: "green",
+                zIndex: "2",
+                right: "20px",
+              }}
+            ></div>
+          )}
         </Box>
       ))}
     </Box>
