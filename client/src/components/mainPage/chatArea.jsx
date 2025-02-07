@@ -7,8 +7,10 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import axios from "axios";
 import { userContext } from "../../Context/UserState";
 import { socketContext } from "../../Context/SocketState";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useMediaQuery } from "@mui/material";
 
-const ChatArea = ({ chat_id }) => {
+const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   const user = useContext(userContext);
   const socket = useContext(socketContext);
   const [newMessage, setNewMessage] = useState("");
@@ -17,6 +19,7 @@ const ChatArea = ({ chat_id }) => {
   const [chatLogo, setChatLogo] = useState("");
   const [isGroupChat, setIsGroupChat] = useState(false);
   const chatContainerRef = useRef(null);
+  const isSmallScreen = useMediaQuery("(max-width:700px)");
 
   // Function to scroll to the bottom
   const scrollToBottom = () => {
@@ -102,16 +105,30 @@ const ChatArea = ({ chat_id }) => {
         msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
+      chat = chat.map((obj) => {
+        if (obj.chat_id == chat_id) {
+          obj.latestMessage = newMessage;
+        }
+        return obj;
+      });
+      updateChat(chat);
     }
   };
-
   useEffect(() => {
     socket.socket.on("message", (data) => {
+      alert("Message received");
       const obj = {
-        content: data,
+        content: data.msg,
         sender: 0,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
+      chat = chat.map((obj) => {
+        if (obj.chat_id == chat_id) {
+          obj.latestMessage = data.msg;
+        }
+        return obj;
+      });
+      updateChat(chat);
     });
   }, []);
 
@@ -165,6 +182,11 @@ const ChatArea = ({ chat_id }) => {
           alignItems: "center",
         }}
       >
+        {isSmallScreen && (
+          <IconButton onClick={() => updateShowChatArea()}>
+            <ArrowBackIcon fontSize="large" />
+          </IconButton>
+        )}
         <Box
           sx={{
             width: 60,

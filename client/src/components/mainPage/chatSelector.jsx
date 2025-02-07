@@ -8,15 +8,15 @@ import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const ChatSelector = ({ updateChat_id }) => {
+const ChatSelector = ({ updateChat_id, updateChat, chat }) => {
   const user = useContext(userContext);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = useState("");
   const [showOption, setShowOption] = useState(false);
-  const [chat, setChat] = useState([
-    { chatName: "", latestMessage: "", chat_id: "", logo: "" },
-  ]);
+  // const [chat, setChat] = useState([
+  //   { chatName: "", latestMessage: "", chat_id: "", logo: "" },
+  // ]);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [displaySearchResults, setDisplaySearchResults] = useState(false);
 
@@ -48,7 +48,7 @@ const ChatSelector = ({ updateChat_id }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (response.status === 200) setChat(response.data);
+      if (response.status === 200) updateChat(response.data);
     } catch (err) {
       alert(err.response.data.message);
       navigate("/");
@@ -88,29 +88,39 @@ const ChatSelector = ({ updateChat_id }) => {
   return (
     <Box
       sx={{
-        // background: "#F5F5F5",
-        background: "#B3B3B3",
+        background: "linear-gradient(145deg, #F5F5F5, #E0E0E0)",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         gap: "20px",
-        padding: "15px",
-        width: "100%",
+        padding: "20px",
+        width: "94%",
+        borderRadius: "12px",
+        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
       }}
     >
+      {/* Welcome Message */}
       <Box>
         <Typography
-          sx={{ color: "#333333", fontSize: "20px", textAlign: "center" }}
+          sx={{
+            color: "#2C3E50",
+            fontSize: "24px",
+            textAlign: "center",
+            fontWeight: "600",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+          }}
         >
-          Welcome {user.userDetails.username}
+          Welcome, {user.userDetails.username}!
         </Typography>
       </Box>
+
+      {/* Search Bar and More Options */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           gap: "10px",
-          color: "#333333",
+          color: "#2C3E50",
         }}
       >
         <TextField
@@ -125,28 +135,35 @@ const ChatSelector = ({ updateChat_id }) => {
             endAdornment: (
               <InputAdornment position="end">
                 <IconButton onClick={handleSearchClick}>
-                  <SearchIcon sx={{ color: "#333333" }} />
+                  <SearchIcon sx={{ color: "#2C3E50" }} />
                 </IconButton>
               </InputAdornment>
             ),
           }}
           sx={{
             backgroundColor: "#FFFFFF",
-            borderRadius: "5px",
+            borderRadius: "8px",
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
                 borderColor: "#BDBDBD",
               },
+              "&:hover fieldset": {
+                borderColor: "#3498DB",
+              },
             },
             "&:hover": {
-              backgroundColor: "#F1F1F1",
+              backgroundColor: "#F8F9FA",
             },
           }}
         />
         <Box sx={{ position: "relative" }}>
           <MoreVertIcon
             fontSize="large"
-            sx={{ cursor: "pointer", color: "#333333" }}
+            sx={{
+              cursor: "pointer",
+              color: "#2C3E50",
+              "&:hover": { color: "#3498DB" },
+            }}
             onClick={handleShowMoreOptions}
           />
           <Box
@@ -155,19 +172,21 @@ const ChatSelector = ({ updateChat_id }) => {
               background: "#FFFFFF",
               zIndex: "2",
               right: "0",
-              borderRadius: "7px",
+              borderRadius: "8px",
+              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
               display: showOption ? "block" : "none",
-              width: "120px",
+              width: "140px",
+              overflow: "hidden",
             }}
           >
             <Typography
               sx={{
                 cursor: "pointer",
-                padding: "10px",
+                padding: "12px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                "&:hover": { backgroundColor: "#F1F1F1", color: "black" },
+                "&:hover": { backgroundColor: "#F8F9FA", color: "#3498DB" },
               }}
               onClick={handleCreateGroup}
             >
@@ -176,11 +195,11 @@ const ChatSelector = ({ updateChat_id }) => {
             <Typography
               sx={{
                 cursor: "pointer",
-                padding: "10px",
+                padding: "12px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                "&:hover": { backgroundColor: "#F1F1F1", color: "black" },
+                "&:hover": { backgroundColor: "#F8F9FA", color: "#E74C3C" },
               }}
               onClick={handleLogOut}
             >
@@ -189,25 +208,42 @@ const ChatSelector = ({ updateChat_id }) => {
           </Box>
         </Box>
       </Box>
+
+      {/* Search Results */}
       {displaySearchResults && availableUsers.length > 0 && (
         <Box
           sx={{
             display: "flex",
-            borderBottom: "1px solid rgba(0,0,0,0.1)",
             flexDirection: "column",
             gap: "15px",
-            paddingBottom: "10px",
-            backgroundColor: "#B3B3B3",
+            padding: "15px",
+            backgroundColor: "#FFFFFF",
+            borderRadius: "8px",
+            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Typography sx={{ color: "#333333", fontSize: "16px" }}>
-            Search Results
-          </Typography>
           <Box
-            sx={{ cursor: "pointer" }}
-            onClick={() => setDisplaySearchResults(false)}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
           >
-            X
+            <Typography
+              sx={{ color: "#2C3E50", fontSize: "18px", fontWeight: "500" }}
+            >
+              Search Results
+            </Typography>
+            <Box
+              sx={{
+                cursor: "pointer",
+                color: "#E74C3C",
+                "&:hover": { color: "#C0392B" },
+              }}
+              onClick={() => setDisplaySearchResults(false)}
+            >
+              X
+            </Box>
           </Box>
           {availableUsers.map((chat, index) => (
             <Box
@@ -217,22 +253,25 @@ const ChatSelector = ({ updateChat_id }) => {
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                "&:hover": { backgroundColor: "#F1F1F1" },
+                padding: "8px",
+                borderRadius: "8px",
+                "&:hover": { backgroundColor: "#F8F9FA" },
               }}
             >
               <Box
                 sx={{
-                  width: "65px",
-                  height: "65px",
+                  width: "60px",
+                  height: "60px",
                   borderRadius: "50%",
                   backgroundImage: `url(${chat.logo})`,
                   backgroundSize: "cover",
                   backgroundPosition: "center",
-                  marginRight: "8px",
+                  marginRight: "12px",
+                  border: "2px solid #3498DB",
                 }}
               />
               <Box sx={{ textAlign: "left" }}>
-                <Typography sx={{ color: "#333333" }}>
+                <Typography sx={{ color: "#2C3E50", fontWeight: "500" }}>
                   <b>{chat.chatName}</b>
                 </Typography>
               </Box>
@@ -240,6 +279,8 @@ const ChatSelector = ({ updateChat_id }) => {
           ))}
         </Box>
       )}
+
+      {/* No User Found */}
       {displaySearchResults && availableUsers.length === 0 && (
         <Box
           sx={{
@@ -247,14 +288,24 @@ const ChatSelector = ({ updateChat_id }) => {
             display: "flex",
             flexDirection: "column",
             gap: "15px",
-            padding: "10px",
+            padding: "15px",
             backgroundColor: "#FFFFFF",
+            borderRadius: "8px",
+            boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Typography sx={{ color: "#333333" }}>Search Results</Typography>
-          <Typography sx={{ color: "gray" }}>No User Found</Typography>
+          <Typography
+            sx={{ color: "#2C3E50", fontSize: "18px", fontWeight: "500" }}
+          >
+            Search Results
+          </Typography>
+          <Typography sx={{ color: "gray", fontStyle: "italic" }}>
+            No User Found
+          </Typography>
         </Box>
       )}
+
+      {/* Chat List */}
       {chat.map((chat, index) => (
         <Box
           key={index}
@@ -263,7 +314,9 @@ const ChatSelector = ({ updateChat_id }) => {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
-            "&:hover": { backgroundColor: "#F1F1F1" },
+            padding: "10px",
+            borderRadius: "8px",
+            "&:hover": { backgroundColor: "#F8F9FA" },
           }}
         >
           <Box
@@ -274,14 +327,15 @@ const ChatSelector = ({ updateChat_id }) => {
               backgroundImage: `url(${chat.logo})`,
               backgroundSize: "cover",
               backgroundPosition: "center",
-              marginRight: "8px",
+              marginRight: "12px",
+              border: "2px solid #3498DB",
             }}
           />
           <Box sx={{ textAlign: "left" }}>
-            <Typography sx={{ color: "#333333" }}>
+            <Typography sx={{ color: "#2C3E50", fontWeight: "500" }}>
               <b>{chat.chatName}</b>
             </Typography>
-            <Typography sx={{ color: "gray", fontSize: "12px" }}>
+            <Typography sx={{ color: "gray", fontSize: "14px" }}>
               {chat.latestMessage}
             </Typography>
           </Box>

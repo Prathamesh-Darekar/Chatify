@@ -51,14 +51,14 @@ io.on("connection", (socket) => {
     const result = socketInfo.find((obj) => obj.userId === userId);
     if (result != null) {
       roomId = result.socketId;
-      socket.to(roomId).emit("message", msg);
+      socket.to(roomId).emit("message", { msg });
     }
   });
   socket.on("join-group", ({ roomName }) => {
     socket.join(roomName);
   });
   socket.on("groupChat", ({ msg, roomName }) => {
-    socket.to(roomName).emit("message", msg);
+    socket.to(roomName).emit("message", { msg, roomName });
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);
