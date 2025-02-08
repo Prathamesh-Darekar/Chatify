@@ -8,7 +8,7 @@ import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const ChatSelector = ({ updateChat_id, chat }) => {
+const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
   const user = useContext(userContext);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -17,19 +17,21 @@ const ChatSelector = ({ updateChat_id, chat }) => {
   const [availableUsers, setAvailableUsers] = useState([]);
   const [displaySearchResults, setDisplaySearchResults] = useState(false);
 
+  // Storing the search value into state
   const handleChange = (e) => setSearchValue(e.target.value);
 
+  // Fetches all the users whose names are similar to search value
   const handleSearchClick = async () => {
     if (!searchValue) return;
     try {
       const response = await axios.get(
-        `${user.serverUrl}/api/user/finduser/${searchValue}`,
+        `${user.serverUrl}/api/user/${user.userDetails.userId}/finduser/${searchValue}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       if (response.status === 200) {
-        if (response.data.length > 0) setAvailableUsers(response.data);
+        setAvailableUsers(response.data);
         setDisplaySearchResults(true);
       }
     } catch (err) {
@@ -37,10 +39,12 @@ const ChatSelector = ({ updateChat_id, chat }) => {
     }
   };
 
+  // Changes chat
   const handleClick = (chat_id) => {
     updateChat_id(chat_id);
   };
 
+  // Handles when we click on the search results
   const handleSearchResultClick = async (id) => {
     try {
       const response = await axios.post(
@@ -50,14 +54,22 @@ const ChatSelector = ({ updateChat_id, chat }) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (response.status === 200) setDisplaySearchResults(false);
+      if (response.status === 200) {
+        setDisplaySearchResults(false);
+        updateFlag();
+      }
     } catch (e) {
       console.log("Error in chatSelector-handleSearchResultClick", e);
     }
   };
 
+  // Re-directs to create group page
   const handleCreateGroup = () => navigate("/creategroup");
+
+  // Handles whether to display logout and create group options or not
   const handleShowMoreOptions = () => setShowOption(!showOption);
+
+  // Logs out the user
   const handleLogOut = () => {
     localStorage.clear();
     navigate("/");
@@ -205,6 +217,7 @@ const ChatSelector = ({ updateChat_id, chat }) => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              padding: "0 40px",
             }}
           >
             <Typography
@@ -217,6 +230,7 @@ const ChatSelector = ({ updateChat_id, chat }) => {
                 cursor: "pointer",
                 color: "#E74C3C",
                 "&:hover": { color: "#C0392B" },
+                fontSize: "25px",
               }}
               onClick={() => setDisplaySearchResults(false)}
             >
@@ -292,6 +306,7 @@ const ChatSelector = ({ updateChat_id, chat }) => {
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
             padding: "10px",
             borderRadius: "8px",
             "&:hover": { backgroundColor: "#F8F9FA" },
@@ -314,8 +329,10 @@ const ChatSelector = ({ updateChat_id, chat }) => {
             <Typography sx={{ color: "#2C3E50", fontWeight: "500" }}>
               <b>{chat.chatName}</b>
             </Typography>
-            <Typography sx={{ color: "gray", fontSize: "14px" }}>
-              {chat.latestMessage}
+            <Typography
+              sx={{ color: chat.isTyping ? "green" : "gray", fontSize: "14px" }}
+            >
+              {chat.isTyping ? "Typing..." : chat.latestMessage}
             </Typography>
           </Box>
           {chat.newMessage && (
@@ -327,7 +344,7 @@ const ChatSelector = ({ updateChat_id, chat }) => {
                 borderRadius: "50%",
                 background: "green",
                 zIndex: "2",
-                right: "20px",
+                right: "40px",
               }}
             ></div>
           )}

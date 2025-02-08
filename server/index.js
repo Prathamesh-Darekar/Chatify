@@ -41,8 +41,8 @@ io.on("connection", (socket) => {
   socket.on("chat-room", ({ msg, chat_id }) => {
     socket.to(chat_id).emit("message", { msg, chat_id });
   });
-  socket.on("typing", ({ chat_id }) => {
-    socket.to(chat_id).emit("indicate-typing", chat_id);
+  socket.on("typing", ({ chat_id, flag }) => {
+    socket.to(chat_id).emit("indicate-typing", { chat_id, flag });
   });
   socket.on("disconnect", () => {
     console.log("disconnected", socket.id);

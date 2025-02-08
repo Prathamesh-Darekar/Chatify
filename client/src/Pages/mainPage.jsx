@@ -8,12 +8,18 @@ import { socketContext } from "../Context/SocketState";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const mainPage = () => {
+const mainPage = ({
+  updateChat_id,
+  chat_id,
+  showChatArea,
+  updateShowChatArea,
+}) => {
   const navigate = useNavigate();
   const isSmallScreen = useMediaQuery("(max-width:700px)");
   const token = localStorage.getItem("token");
   const socket = useContext(socketContext);
   const user = useContext(userContext);
+  const [flag, setFlag] = useState(true);
   const [chat, setChat] = useState([
     {
       chatName: "",
@@ -21,20 +27,17 @@ const mainPage = () => {
       chat_id: "",
       logo: "",
       newMessage: false,
+      isTyping: false,
     },
   ]);
-  const [chat_id, setChat_id] = useState("");
-  const [showChatArea, setShowChatArea] = useState(false);
-  const updateChat_id = (id) => {
-    setChat_id(id);
-    updateShowChatArea();
-  };
-  const updateShowChatArea = () => {
-    setShowChatArea(!showChatArea);
-  };
+
+  const updateFlag = () => setFlag(!flag);
+
   const updateChat = (data) => {
     setChat(data);
   };
+
+  //Fetching all the chats of a user
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -51,11 +54,15 @@ const mainPage = () => {
       }
     };
     fetchChats();
-  }, []);
+  }, [flag]);
+
+  // Websocket listener
   useEffect(() => {
+    // creates rooms
     chat.map((obj) => {
       socket.socket.emit("join-room", { chat_id: obj.chat_id });
     });
+    //fetches message from the sender
     socket.socket.on("message", (data) => {
       let chat1 = chat.map((obj) => {
         if (obj.chat_id == data.chat_id) {
@@ -66,7 +73,16 @@ const mainPage = () => {
       });
       setChat(chat1);
     });
+    // Checks whether user is typing or not
+    socket.socket.on("indicate-typing", (data) => {
+      let chat1 = chat.map((obj) => {
+        if (data.chat_id == obj.chat_id) obj.isTyping = data.flag;
+        return obj;
+      });
+      setChat(chat1);
+    });
   }, [chat]);
+
   return (
     <div
       style={{
@@ -85,7 +101,11 @@ const mainPage = () => {
           }}
           className="scrollbar-hidden"
         >
-          <ChatSelector updateChat_id={updateChat_id} chat={chat} />
+          <ChatSelector
+            updateChat_id={updateChat_id}
+            chat={chat}
+            updateFlag={updateFlag}
+          />
         </div>
       )}
       {!showChatArea && isSmallScreen && (
@@ -98,7 +118,11 @@ const mainPage = () => {
           }}
           className="scrollbar-hidden"
         >
-          <ChatSelector updateChat_id={updateChat_id} chat={chat} />
+          <ChatSelector
+            updateChat_id={updateChat_id}
+            chat={chat}
+            updateFlag={updateFlag}
+          />
         </div>
       )}
       {!isSmallScreen && (

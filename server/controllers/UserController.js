@@ -83,15 +83,29 @@ const loginUser = async (req, res) => {
 
 const findUser = async (req, res) => {
   const name = req.params.username;
+  const u_id = req.params.id;
   let arr = [];
-  if (!name) return res.status(409).json({ message: "Please enter name" });
-  const availableUsers = await User.find({
-    username: { $regex: new RegExp(`${name}`, "i") },
+  if (!name || !u_id)
+    return res.status(409).json({ message: "Please enter name" });
+  const chats = await Chat.find({ users: u_id }).select("users");
+
+  const usersInChats = new Set();
+  chats.forEach((chat) => {
+    chat.users.forEach((user) => {
+      usersInChats.add(user.toString()); // Converting ObjectId to string for easy comparison
+    });
   });
-  for (let user of availableUsers) {
+
+  const usersNotInChat = await User.find({
+    _id: { $nin: Array.from(usersInChats) },
+    username: { $regex: new RegExp(`${name}`, "i") },
+  }).select("username dp _id");
+
+  for (let user of usersNotInChat) {
     let newObj = {
       user_id: user._id,
       chatName: user.username,
+      logo: user.dp,
     };
     arr.push(newObj);
   }
@@ -99,7 +113,6 @@ const findUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  console.log("hi");
   let allUsers = await User.find(
     { _id: { $ne: req.user._id } },
     { username: 1 }

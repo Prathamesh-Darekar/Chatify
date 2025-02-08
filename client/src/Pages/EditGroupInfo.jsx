@@ -13,28 +13,22 @@ import {
 } from "@mui/material";
 import { PhotoCamera, Close } from "@mui/icons-material";
 import { userContext } from "../Context/UserState";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 // CreateGroup Component
-const CreateGroup = () => {
-  // State to manage form inputs
-  const [groupName, setGroupName] = useState("");
+const CreateGroup = ({ updateChat_id }) => {
+  const [groupName, setGroupName] = useState("sss");
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [groupIcon, setGroupIcon] = useState(null);
   const [allUsers, setAllUsers] = useState(null);
   const navigate = useNavigate();
-  useEffect(() => {
-    console.log(allUsers);
-  }, [allUsers]);
-  useEffect(() => {
-    console.log(selectedParticipants);
-  }, [selectedParticipants]);
+  const { chat_id } = useParams();
   // API call to get all available users
   const user = useContext(userContext);
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const getUser = async () => {
       try {
-        const token = localStorage.getItem("token");
         const response = await axios.get(
           `http://localhost:8080/api/user/getuser`,
           {
@@ -51,21 +45,40 @@ const CreateGroup = () => {
       }
     };
     getUser();
+    const getChatInfo = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8080/api/chat/${chat_id}/getinfo`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response && response.status == 200) {
+          setGroupName(response.data.chatName);
+          setSelectedParticipants(response.data.users);
+          setGroupIcon(response.data.logo);
+        }
+      } catch (e) {
+        console.log("Error in GroupForm component", e);
+      }
+    };
+    getChatInfo();
   }, []);
-
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Perform form submission logic here
+    const token = localStorage.getItem("token");
+    const obj = {
+      chatName: groupName,
+      users: selectedParticipants.map((obj) => obj._id),
+      logo: groupIcon,
+    };
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://localhost:8080/api/groupchat/new`,
-        {
-          groupName,
-          participants: selectedParticipants,
-          groupLogo: groupIcon,
-        },
+      const response = await axios.put(
+        `${user.serverUrl}/api/chat/${chat_id}/edit`,
+        obj,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -73,12 +86,11 @@ const CreateGroup = () => {
         }
       );
       if (response.status == 200) {
-        navigate("/chat");
-        alert("Group created successfully..!!");
+        updateChat_id(chat_id);
+        navigate(-1);
       }
     } catch (e) {
-      console.log("Error in group create Form");
-      alert("Error check the console");
+      console.log("Error when editing group info");
     }
   };
 
@@ -97,6 +109,9 @@ const CreateGroup = () => {
     if (res.status == 200) setGroupIcon(res.data.url);
   };
 
+  const handleChange = (e) => {
+    setGroupName(e.target.value);
+  };
   // Handle participant selection
   const handleParticipantChange = (event, value) => {
     setSelectedParticipants(value);
@@ -117,7 +132,7 @@ const CreateGroup = () => {
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Create New Group
+        Edit Group Details
       </Typography>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
@@ -128,8 +143,7 @@ const CreateGroup = () => {
               label="Group Name"
               variant="outlined"
               value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              required
+              onChange={handleChange}
             />
           </Grid>
 
@@ -212,7 +226,7 @@ const CreateGroup = () => {
               type="submit"
               size="large"
             >
-              Create Group
+              Submit
             </Button>
           </Grid>
         </Grid>

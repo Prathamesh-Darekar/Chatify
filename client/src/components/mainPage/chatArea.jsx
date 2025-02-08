@@ -9,6 +9,8 @@ import { userContext } from "../../Context/UserState";
 import { socketContext } from "../../Context/SocketState";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useMediaQuery } from "@mui/material";
+import EmojiPicker from "emoji-picker-react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   const user = useContext(userContext);
@@ -17,10 +19,19 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   const [userChats, setUserChats] = useState([]);
   const [chatName, setChatName] = useState("");
   const [chatLogo, setChatLogo] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [groupChat, setGroupChat] = useState(null);
   const chatContainerRef = useRef(null);
   const isSmallScreen = useMediaQuery("(max-width:700px)");
   const chatId = useRef(chat_id);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const navigate = useNavigate();
+
+  // Function to handle emoji selection
+  const handleEmojiClick = (emojiObject) => {
+    setNewMessage((prevValue) => prevValue + emojiObject.emoji);
+  };
+
+  // useRef()
   useEffect(() => {
     chatId.current = chat_id;
   }, [chat_id]);
@@ -29,19 +40,19 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   const scrollToBottom = () => {
     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
   };
-
   useEffect(() => {
     scrollToBottom();
   }, []);
-
   useEffect(() => {
     scrollToBottom();
-  }, [userChats, isTyping]);
+  }, [userChats, chat]);
 
   // Typing indicator
   setTimeout(() => {
-    if (newMessage != "") socket.socket.emit("typing", { chat_id });
-  }, [2000]);
+    if (newMessage == "")
+      socket.socket.emit("typing", { chat_id, flag: false });
+    else socket.socket.emit("typing", { chat_id, flag: true });
+  }, [1000]);
 
   // To remove the new message indicator when chatArea is opened
   const removeNewMessageIndicator = () => {
@@ -52,6 +63,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
     updateChat(chat);
   };
 
+  // To fetch all the messages of a chat
   useEffect(() => {
     const getChatMessages = async () => {
       try {
@@ -68,6 +80,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           setUserChats(response.data.chatMessages);
           setChatName(response.data.chatName);
           setChatLogo(response.data.logo);
+          setGroupChat(response.data.groupChat);
         }
       } catch (err) {
         console.log("Error in chatArea.jsx", err);
@@ -78,7 +91,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
     return () => removeNewMessageIndicator();
   }, [chat_id]);
 
-  // function to call an API to store new message into database
+  // API call to store new message into database
   const storeMessage = async (s_id, content, c_id) => {
     try {
       const token = localStorage.getItem("token");
@@ -101,9 +114,9 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
     }
   };
 
+  // Handling messages in realtime
   const handleSendMessage = () => {
     if (chat_id && newMessage !== "") {
-      setIsTyping(false);
       const msgId = storeMessage(user.userDetails.userId, newMessage, chat_id);
       socket.socket.emit("chat-room", { msg: newMessage, chat_id });
       const obj = {
@@ -112,10 +125,13 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
+      setNewMessage("");
     }
   };
+
   // Websocket listener
   useEffect(() => {
+    //fetches message from the sender in realtime
     socket.socket.on("message", (data) => {
       const obj = {
         content: data.msg,
@@ -125,17 +141,14 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         setUserChats((prevArray) => [...prevArray, obj]);
       return () => socket.socket.off("message");
     });
-    socket.socket.on("indicate-typing", (data) => {
-      setIsTyping(true);
-      setInterval(() => setIsTyping(false), 1000);
-    });
   }, []);
 
+  //Storing new message into newMessage state
   const handleChange = (event) => {
     setNewMessage(event.target.value);
   };
 
-  // Delete a message
+  // API call to delete a message
   const handleMessageDelete = async (msgId) => {
     try {
       const token = localStorage.getItem("token");
@@ -197,7 +210,10 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
             marginRight: "15px",
           }}
         />
-        <Box>
+        <Box
+          onClick={() => (groupChat ? navigate(`/${chatId.current}/edit`) : "")}
+          sx={{ cursor: "pointer" }}
+        >
           <Typography variant="h6">{chatName}</Typography>
         </Box>
       </Box>
@@ -252,29 +268,35 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
             </IconButton>
           </Box>
         ))}
-        {isTyping && (
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "flex-start",
-              gap: "10px",
-            }}
-          >
-            <Box
-              sx={{
-                backgroundColor: "#E5E7EB",
-                color: "#333",
-                padding: "10px 20px",
-                borderRadius: "20px",
-                maxWidth: "75%",
-                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                wordBreak: "break-word",
-              }}
-            >
-              <Typography variant="body2">Typing...</Typography>
-            </Box>
-          </Box>
-        )}
+        {chat.map((obj) => {
+          if (obj && obj.chat_id == chatId.current && obj.isTyping) {
+            return (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  gap: "10px",
+                }}
+              >
+                <Box
+                  sx={{
+                    // backgroundColor: "#E5E7EB",
+                    color: "green",
+                    padding: "7px 17px",
+                    borderRadius: "20px",
+                    maxWidth: "75%",
+                    // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  <Typography variant="body2" fontSize={14}>
+                    Typing...
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          }
+        })}
       </Box>
 
       {/* Message Input */}
@@ -285,6 +307,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           padding: "10px 20px",
           borderTop: "1px solid #E0E0E0",
           backgroundColor: "#fff",
+          position: "relative",
         }}
       >
         <TextField
@@ -300,7 +323,10 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           }}
         />
         <IconButton sx={{ color: "#FFEB3B" }}>
-          <SentimentSatisfiedOutlinedIcon fontSize="large" />
+          <SentimentSatisfiedOutlinedIcon
+            fontSize="large"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          />
         </IconButton>
         <IconButton sx={{ color: "#00B0FF" }}>
           <AddOutlinedIcon fontSize="large" />
@@ -308,6 +334,11 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         <IconButton sx={{ color: "#4CAF50" }} onClick={handleSendMessage}>
           <SendIcon fontSize="large" />
         </IconButton>
+        {showEmojiPicker && (
+          <Box sx={{ position: "absolute", bottom: "70px", right: "110px" }}>
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </Box>
+        )}
       </Box>
     </Box>
   );

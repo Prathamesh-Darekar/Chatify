@@ -9,7 +9,7 @@ const {
 const wrapAsync = require("../utils/wrapAsync");
 const { isAuthorized } = require("../middleware");
 
-router.route("/finduser/:username").get(isAuthorized, wrapAsync(findUser));
+router.route("/:id/finduser/:username").get(isAuthorized, wrapAsync(findUser));
 // Route for user signUp
 router.post("/register", wrapAsync(signUp));
 // Route for user login

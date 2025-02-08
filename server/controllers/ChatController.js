@@ -64,6 +64,7 @@ const showChats = async (req, res) => {
       chatName: chatname,
       logo: data.logo,
       newMessage: false,
+      isTyping: false,
     };
     arr.push(newObj);
   }
@@ -121,4 +122,33 @@ const createChat = async (req, res) => {
   return res.status(200).json("success");
 };
 
-module.exports = { accessChat, showChats, getChatDetails, createChat };
+const getGroupChatParticipants = async (req, res) => {
+  const chat_id = req.params.chat_id;
+  const chat = await Chat.findById(chat_id)
+    .select("chatName isGroupChat logo users")
+    .populate({ path: "users", select: "username" });
+
+  return res.status(200).json(chat);
+};
+
+const editChat = async (req, res) => {
+  const { chat_id } = req.params;
+  const newChatInfo = req.body;
+  if (!chat_id || !newChatInfo)
+    return res.status(400).json({ msg: "bad request" });
+  const chat = await Chat.findById(chat_id);
+  chat.chatName = newChatInfo.chatName;
+  chat.logo = newChatInfo.logo;
+  chat.users = newChatInfo.users;
+  await chat.save();
+  return res.status(200).json({ msg: "success" });
+};
+
+module.exports = {
+  accessChat,
+  showChats,
+  getChatDetails,
+  createChat,
+  getGroupChatParticipants,
+  editChat,
+};
