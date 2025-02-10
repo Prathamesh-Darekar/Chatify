@@ -4,9 +4,9 @@ const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Message = require("../models/Message");
 
+// API to create a new user
 const signUp = async (req, res) => {
-  const { username, password } = req.body;
-
+  const { username, password, imageUrl } = req.body;
   if (!(username && password))
     return res
       .status(400)
@@ -26,6 +26,9 @@ const signUp = async (req, res) => {
     username,
     password: hashedPassword,
   });
+  if (imageUrl) {
+    newUser.dp = imageUrl;
+  }
   await newUser.save();
 
   // Checking if the user exists or not
@@ -45,13 +48,12 @@ const signUp = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
-  console.log(token);
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
+// API for user login
 const loginUser = async (req, res) => {
   const { username, password } = req.body;
-
   if (!(username && password))
     return res
       .status(400)
@@ -74,21 +76,34 @@ const loginUser = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
-  console.log("Logging from userCotroller-loginUser ", token);
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
 const findUser = async (req, res) => {
   const name = req.params.username;
+  const u_id = req.params.id;
   let arr = [];
-  if (!name) return res.status(409).json({ message: "Please enter name" });
-  const availableUsers = await User.find({
-    username: { $regex: new RegExp(`${name}`, "i") },
+  if (!name || !u_id)
+    return res.status(409).json({ message: "Please enter name" });
+  const chats = await Chat.find({ users: u_id }).select("users");
+
+  const usersInChats = new Set();
+  chats.forEach((chat) => {
+    chat.users.forEach((user) => {
+      usersInChats.add(user.toString());
+    });
   });
-  for (let user of availableUsers) {
+
+  const usersNotInChat = await User.find({
+    _id: { $nin: Array.from(usersInChats) },
+    username: { $regex: new RegExp(`${name}`, "i") },
+  }).select("username dp _id");
+
+  for (let user of usersNotInChat) {
     let newObj = {
       user_id: user._id,
       chatName: user.username,
+      logo: user.dp,
     };
     arr.push(newObj);
   }
@@ -96,7 +111,6 @@ const findUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  console.log("hi");
   let allUsers = await User.find(
     { _id: { $ne: req.user._id } },
     { username: 1 }
@@ -105,4 +119,27 @@ const getAllUsers = async (req, res) => {
   else res.status(200).json(allUsers);
 };
 
-module.exports = { signUp, loginUser, findUser, getAllUsers };
+// API to edit the user information
+const editUser = async (req, res) => {
+  const { id } = req.params;
+  const { username, profilePicture } = req.body;
+  if (!id || !username)
+    return res.status(400).json({ message: "Please provide username" });
+  const user1 = await User.find({ username, _id: { $ne: id } });
+  if (user1.length > 0)
+    return res.status(400).json({ message: "Username already exists" });
+  if (!id || !username || !profilePicture)
+    return res.status(400).json({ message: "Bad request" });
+  const user = await User.findById(id);
+  if (user) {
+    (user.username = username), (user.dp = profilePicture);
+    await user.save();
+    user.password = "";
+  } else {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  return res.status(200).json(user);
+};
+
+module.exports = { signUp, loginUser, findUser, getAllUsers, editUser };

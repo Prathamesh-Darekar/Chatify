@@ -1,12 +1,10 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useEffect, useState } from "react";
 const userContext = createContext();
 
 const UserState = (props) => {
-  console.log(localStorage.getItem("user"));
   let [userDetails, setUserDetails] = useState(
     JSON.parse(localStorage.getItem("user"))
   );
-
   const serverUrl = "http://localhost:8080";
 
   let updateUserDetails = (obj) => {

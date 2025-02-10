@@ -1,12 +1,19 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
-import { Container, TextField, Button, Typography } from "@mui/material";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  CircularProgress,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { userContext } from "../../Context/UserState";
 
 const Login = () => {
   const navigate = useNavigate();
   let user1 = useContext(userContext);
+  const [isLoading, setIsLoading] = useState(false);
   //stores login form data
   let [loginData, setLoginData] = useState({
     username: "",
@@ -19,6 +26,7 @@ const Login = () => {
 
   let handleSubmit = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
     setLoginData({
       username: "",
       password: "",
@@ -27,15 +35,15 @@ const Login = () => {
     try {
       // request to server
       const response = await axios.post(
-        "http://localhost:8080/api/user/login",
+        `${user1.serverUrl}/api/user/login`,
         loginData
       );
       const { token, message, user } = response.data;
-      // correct response
       if (response.status === 200) {
         user1.updateUserDetails({
           userId: user._id,
           username: user.username,
+          dp: user.dp,
         });
         // store the jwt token in local storage
         localStorage.setItem("token", token);
@@ -43,10 +51,11 @@ const Login = () => {
         navigate("/chat");
         alert(message);
       }
-    } catch (error) {
+    } catch (e) {
       // any status code except 200 to 299 is treated as error and triggers catch block
-      console.log(error);
+      alert(e.response?.data?.message || "An error occurred.");
     }
+    setIsLoading(false);
   };
 
   return (
@@ -117,7 +126,7 @@ const Login = () => {
             borderRadius: "10px",
           }}
         >
-          Login
+          {isLoading ? <CircularProgress size={24} /> : "Login"}
         </Button>
       </form>
     </Container>

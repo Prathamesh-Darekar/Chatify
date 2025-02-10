@@ -12,6 +12,11 @@ const userSchema = Schema({
     required: true,
     trim: true,
   },
+  dp: {
+    type: String,
+    default:
+      "http://res.cloudinary.com/prathamesh19/image/upload/v1738688808/cuwiwp0w86bk8vkeopgm.jpg",
+  },
   chats: [
     {
       type: Schema.Types.ObjectId,

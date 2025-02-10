@@ -14,23 +14,24 @@ import {
 } from "@mui/material";
 import { PhotoCamera, Close } from "@mui/icons-material";
 import { userContext } from "../Context/UserState";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const GroupForm = () => {
-  // State to manage form inputs
-  const [groupName, setGroupName] = useState("");
+// CreateGroup Component
+const EditGroup = ({ updateChat_id }) => {
+  const [groupName, setGroupName] = useState("sss");
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [groupIcon, setGroupIcon] = useState(null);
   const [allUsers, setAllUsers] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const { chat_id } = useParams();
   const user = useContext(userContext);
 
   // API call to get all available users
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const getUser = async () => {
       try {
-        const token = localStorage.getItem("token");
         const response = await axios.get(`${user.serverUrl}/api/user/getuser`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -45,21 +46,43 @@ const GroupForm = () => {
       }
     };
     getUser();
+    const getChatInfo = async () => {
+      try {
+        const response = await axios.get(
+          `${user.serverUrl}/api/chat/${chat_id}/getinfo`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (response && response.status == 200) {
+          setGroupName(response.data.chatName);
+          setSelectedParticipants(response.data.users);
+          setGroupIcon(response.data.logo);
+        }
+      } catch (e) {
+        alert(e.response?.data?.message || "An error occurred.");
+        console.log("Error in GroupForm component", e);
+      }
+    };
+    getChatInfo();
   }, []);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    const token = localStorage.getItem("token");
+    const obj = {
+      chatName: groupName,
+      users: selectedParticipants.map((obj) => obj._id),
+      logo: groupIcon,
+    };
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${user.serverUrl}/api/groupchat/new`,
-        {
-          groupName,
-          participants: selectedParticipants,
-          groupLogo: groupIcon,
-        },
+      const response = await axios.put(
+        `${user.serverUrl}/api/chat/${chat_id}/edit`,
+        obj,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,19 +90,51 @@ const GroupForm = () => {
         }
       );
       if (response.status == 200) {
-        navigate("/chat");
-        alert("Group created successfully..!!");
+        updateChat_id(chat_id);
+        navigate(-1);
       }
     } catch (e) {
-      console.log("Error in group create Form");
       alert(e.response?.data?.message || "An error occurred.");
+      console.log("Error when editing group info");
     }
     setIsLoading(false);
+  };
+
+  // RETRIVE public id of image saved in cloudinary
+  const getPublicIdFromUrl = (url) => {
+    const parts = url.split("/");
+    return parts[parts.length - 1].split(".")[0];
+  };
+
+  //API CALL to delete an image from cloudinary
+  const deleteImage = async (imageUrl) => {
+    const publicId = getPublicIdFromUrl(imageUrl);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.delete(
+        `${user.serverUrl}/api/cloudinary/delete`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: { publicId },
+        }
+      );
+    } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
+      console.error("Error deleting image:", e);
+    }
   };
 
   // Handle file upload for group icon
   const handleFileChange = async (e) => {
     setIsLoading(true);
+    if (
+      groupIcon !=
+      "http://res.cloudinary.com/prathamesh19/image/upload/v1738688808/cuwiwp0w86bk8vkeopgm.jpg"
+    ) {
+      await deleteImage(groupIcon);
+    }
     const file = e.target.files[0];
     if (!file) return;
     let formData = new FormData();
@@ -94,6 +149,9 @@ const GroupForm = () => {
     setIsLoading(false);
   };
 
+  const handleChange = (e) => {
+    setGroupName(e.target.value);
+  };
   // Handle participant selection
   const handleParticipantChange = (event, value) => {
     setSelectedParticipants(value);
@@ -114,7 +172,7 @@ const GroupForm = () => {
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
       <Typography variant="h4" align="center" gutterBottom>
-        Create New Group
+        Edit Group Details
       </Typography>
       <form onSubmit={handleSubmit}>
         <Grid container spacing={3}>
@@ -125,8 +183,7 @@ const GroupForm = () => {
               label="Group Name"
               variant="outlined"
               value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              required
+              onChange={handleChange}
             />
           </Grid>
 
@@ -213,7 +270,7 @@ const GroupForm = () => {
               {isLoading ? (
                 <CircularProgress color="white" size={24} />
               ) : (
-                "Create Group"
+                "Submit"
               )}
             </Button>
           </Grid>
@@ -223,4 +280,4 @@ const GroupForm = () => {
   );
 };
 
-export default GroupForm;
+export default EditGroup;

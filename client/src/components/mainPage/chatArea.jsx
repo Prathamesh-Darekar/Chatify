@@ -1,56 +1,113 @@
-import React, { useState, useEffect, useContext, useMemo } from "react";
-import { Box, TextField, Typography } from "@mui/material";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { Box, TextField, Typography, IconButton } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import SentimentSatisfiedOutlinedIcon from "@mui/icons-material/SentimentSatisfiedOutlined";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import axios from "axios";
 import { userContext } from "../../Context/UserState";
 import { socketContext } from "../../Context/SocketState";
-import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useMediaQuery } from "@mui/material";
+import EmojiPicker from "emoji-picker-react";
+import { useNavigate } from "react-router-dom";
 
-const chatArea = ({ chat_id }) => {
-  let user = useContext(userContext);
-  let socket = useContext(socketContext);
-  // stores the value entered in the textfield of chatarea
-  let [newMessage, setNewMessage] = useState("");
-  // to store all the mesages of a chat
-  let [userChats, setUserChats] = useState([]);
-  let [chatName, setChatName] = useState("");
+const ChatArea = ({
+  chat_id,
+  updateShowChatArea,
+  updateChat,
+  chat,
+  updateFlag,
+}) => {
+  const user = useContext(userContext);
+  const socket = useContext(socketContext);
+  const [newMessage, setNewMessage] = useState("");
+  const [userChats, setUserChats] = useState([]);
+  const userChatsRef = useRef(userChats);
+  const [chatName, setChatName] = useState("");
+  const [chatLogo, setChatLogo] = useState("");
+  const [groupChat, setGroupChat] = useState(null);
+  const chatContainerRef = useRef(null);
+  const isSmallScreen = useMediaQuery("(max-width:700px)");
+  const chatId = useRef(chat_id);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const navigate = useNavigate();
+
+  // Function to handle emoji selection
+  const handleEmojiClick = (emojiObject) => {
+    setNewMessage((prevValue) => prevValue + emojiObject.emoji);
+  };
+
+  // useRef()
+  useEffect(() => {
+    chatId.current = chat_id;
+  }, [chat_id]);
 
   useEffect(() => {
-    let getChatMessages = async () => {
+    userChatsRef.current = userChats;
+  }, [userChats]);
+
+  // Function to scroll to the bottom
+  const scrollToBottom = () => {
+    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  };
+  useEffect(() => {
+    scrollToBottom();
+  }, []);
+  useEffect(() => {
+    scrollToBottom();
+  }, [userChats, chat]);
+
+  // Typing indicator
+  setTimeout(() => {
+    if (newMessage == "")
+      socket.socket.emit("typing", { chat_id, flag: false });
+    else socket.socket.emit("typing", { chat_id, flag: true });
+  }, [1000]);
+
+  // To remove the new message indicator when chatArea is opened
+  const removeNewMessageIndicator = () => {
+    chat = chat.map((obj) => {
+      if (obj.chat_id == chat_id) obj.newMessage = false;
+      return obj;
+    });
+    updateChat(chat);
+  };
+
+  // To fetch all the messages of a chat
+  useEffect(() => {
+    const getChatMessages = async () => {
       try {
-        // get the jwt token from local sotrage
         const token = localStorage.getItem("token");
-        // ADD API CALL TO FETCH THE MESSAGES OF THE CHAT BASED ON chat_id
-        let response = await axios.get(
-          `http://localhost:8080/api/chat/${user.userDetails.username}/${chat_id}`,
+        const response = await axios.get(
+          `${user.serverUrl}/api/chat/${user.userDetails.username}/${chat_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        if (response.status == 200) {
+        if (response.status === 200) {
           setUserChats(response.data.chatMessages);
           setChatName(response.data.chatName);
-          socket.updateRoomId(response.data.user2Id);
+          setChatLogo(response.data.logo);
+          setGroupChat(response.data.groupChat);
         }
-      } catch (err) {
-        console.log("Error in chatArea.jsx");
-        alert(err.response.data.message);
+      } catch (edit) {
+        console.log("Error in chatArea.jsx", e);
+        alert(e.response?.data?.message || "An error occurred.");
       }
     };
     if (chat_id) getChatMessages();
+    return () => removeNewMessageIndicator();
   }, [chat_id]);
 
-  // function to call an api to store new message into database
+  // API call to store new message into database
   const storeMessage = async (s_id, content, c_id) => {
     try {
-      // get the jwt token from local sotrage
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:8080/api/message/new",
+        `${user.serverUrl}/api/message/new`,
         {
           senderId: s_id,
           msg: content,
@@ -64,45 +121,61 @@ const chatArea = ({ chat_id }) => {
       );
       return response.data.msgId;
     } catch (e) {
-      console.log(e);
+      alert(e.response?.data?.message || "An error occurred.");
+      console.log("Error in storeMessage:", e);
     }
   };
 
-  const handleSendMessage = () => {
-    if (chat_id && newMessage != "") {
-      let msgId = storeMessage(user.userDetails.userId, newMessage, chat_id);
-      socket.socket.emit("one-on-one", {
-        userId: socket.roomId,
-        msg: newMessage,
-      });
-      let obj = {
+  // Handling messages in realtime
+  const handleSendMessage = async () => {
+    if (chat_id && newMessage !== "") {
+      const msgId = await storeMessage(
+        user.userDetails.userId,
+        newMessage,
+        chat_id
+      );
+      socket.socket.emit("chat-room", { msg: newMessage, chat_id, msgId });
+      const obj = {
         content: newMessage,
         sender: user.userDetails.userId,
-        msgId,
+        _id: msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
+      setNewMessage("");
     }
   };
 
+  // Websocket listener
   useEffect(() => {
+    //fetches message from the sender in realtime
     socket.socket.on("message", (data) => {
-      let obj = {
-        content: data,
+      const obj = {
+        content: data.msg,
         sender: 0,
+        _id: data.msgId,
       };
-      setUserChats((prevArray) => [...prevArray, obj]);
+      if (data.chat_id == chatId.current)
+        setUserChats((prevArray) => [...prevArray, obj]);
+      return () => socket.socket.off("message");
+    });
+    // deletes the message in realtime
+    socket.socket.on("deleted-message", (data) => {
+      let newUserChats = userChatsRef.current.filter(
+        (message) => message._id != data.msgId
+      );
+      setUserChats(newUserChats);
     });
   }, []);
 
+  //Storing new message into newMessage state
   const handleChange = (event) => {
     setNewMessage(event.target.value);
   };
 
-  // Delete a message
+  // API call to delete a message
   const handleMessageDelete = async (msgId) => {
-    // -------------------------------------------------------------------
+    socket.socket.emit("delete-message", { msgId, chat_id: chatId.current });
     try {
-      // get the jwt token from local sotrage
       const token = localStorage.getItem("token");
       const response = await axios.delete(
         `${user.serverUrl}/api/message/delete`,
@@ -112,156 +185,192 @@ const chatArea = ({ chat_id }) => {
           },
           data: {
             msgId,
-            chatId: chat_id,
+            chatId: chatId.current,
           },
         }
       );
-      if (response.status == 200) {
-        let newChatsArray = userChats.filter((message) => {
-          return message._id != msgId;
-        });
+      if (response.status === 200) {
+        const newChatsArray = userChats.filter(
+          (message) => message._id !== msgId
+        );
         setUserChats(newChatsArray);
       }
     } catch (e) {
-      console.log("Error in handleMessageDelete in ChatArea.jsx");
+      alert(e.response?.data?.message || "An error occurred.");
+      console.log("Error in handleMessageDelete:", e);
     }
   };
-
+  const handleBackClick = () => {
+    updateShowChatArea();
+    updateFlag();
+  };
   return (
-    <div
-      style={{
-        minHeight: "100%",
+    <Box
+      sx={{
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
+        backgroundColor: "#F4F6F8",
       }}
     >
-      <Box>
+      {/* Chat Header */}
+      <Box
+        sx={{
+          padding: "15px 20px",
+          borderBottom: "1px solid #E0E0E0",
+          backgroundColor: "#fff",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {isSmallScreen && (
+          <IconButton onClick={handleBackClick}>
+            <ArrowBackIcon fontSize="large" />
+          </IconButton>
+        )}
         <Box
-          id="chat-header"
           sx={{
-            marginBottom: "20px",
-            padding: "5px 20px",
-            borderBottom: "1px solid #F7F6F4",
+            width: 60,
+            height: 60,
+            borderRadius: "50%",
+            backgroundImage: `url(${chatLogo})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            marginRight: "15px",
           }}
+        />
+        <Box
+          onClick={() => (groupChat ? navigate(`/${chatId.current}/edit`) : "")}
+          sx={{ cursor: "pointer" }}
         >
+          <Typography variant="h6">{chatName}</Typography>
+        </Box>
+      </Box>
+
+      {/* Chat Messages */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "auto",
+          padding: "15px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "15px",
+          height: "24rem",
+        }}
+        ref={chatContainerRef}
+      >
+        {userChats.map((message, index) => (
           <Box
-            id="chat"
+            key={index}
             sx={{
               display: "flex",
-              alignItems: "center",
+              justifyContent:
+                message.sender === user.userDetails.userId
+                  ? "flex-end"
+                  : "flex-start",
+              gap: "10px",
             }}
           >
             <Box
-              id="dp"
               sx={{
-                width: "50px",
-                height: "50px",
-                borderRadius: "50%",
-                border: "1px solid blue",
-                marginRight: "8px",
-              }}
-            ></Box>
-            <Box id="content" sx={{ textAlign: "left" }}>
-              <Typography>
-                <b>{chatName}</b>
-              </Typography>
-              <Typography
-                sx={{
-                  color: "#5B6372",
-                  fontSize: "12px",
-                }}
-              >
-                Online
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
-        <Box
-          p={2}
-          sx={{
-            textAlign: "left",
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            overflowY: "scroll",
-            height: "24rem",
-          }}
-        >
-          {/* swap index with msgId later */}
-          {userChats.map((message, index) => (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                alignSelf:
-                  message.sender == user.userDetails.userId
-                    ? "flex-end"
-                    : "flex-start",
+                backgroundColor:
+                  message.sender === user.userDetails.userId
+                    ? "#3B82F6"
+                    : "#E5E7EB",
+                color:
+                  message.sender === user.userDetails.userId ? "#fff" : "#333",
+                padding: "10px 20px",
+                borderRadius: "20px",
+                maxWidth: "75%",
+                boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                wordBreak: "break-word",
               }}
             >
+              <Typography variant="body2">{message.content}</Typography>
+            </Box>
+            <IconButton
+              onClick={() => handleMessageDelete(message._id)}
+              sx={{ color: "#FF6B6B" }}
+            >
+              <DeleteRoundedIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        ))}
+        {chat.map((obj) => {
+          if (obj && obj.chat_id == chatId.current && obj.isTyping) {
+            return (
               <Box
-                key={index}
                 sx={{
-                  backgroundColor: "#015D4B",
-                  color: "#fff",
-                  padding: "10px 20px",
-                  borderRadius: "20px",
+                  display: "flex",
+                  justifyContent: "flex-start",
+                  gap: "10px",
                 }}
               >
-                <Typography sx={{ fontSize: "14px" }}>
-                  {message.content}
-                </Typography>
+                <Box
+                  sx={{
+                    // backgroundColor: "#E5E7EB",
+                    color: "green",
+                    padding: "7px 17px",
+                    borderRadius: "20px",
+                    maxWidth: "75%",
+                    // boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  <Typography variant="body2" fontSize={14}>
+                    Typing...
+                  </Typography>
+                </Box>
               </Box>
-              <DeleteRoundedIcon
-                fontSize="small"
-                onClick={() => handleMessageDelete(message._id)}
-              />
-            </Box>
-          ))}
-        </Box>
+            );
+          }
+        })}
       </Box>
+
+      {/* Message Input */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: "10px",
-          padding: "10px",
-          borderTop: "2px solid #F7F6F4",
+          padding: "10px 20px",
+          borderTop: "1px solid #E0E0E0",
+          backgroundColor: "#fff",
+          position: "relative",
         }}
       >
         <TextField
-          name="message"
           value={newMessage}
-          id="standard-basic"
-          variant="standard"
-          placeholder="Message"
-          size="medium"
-          required
-          sx={{
-            width: "80%",
-          }}
           onChange={handleChange}
+          variant="outlined"
+          placeholder="Type a message..."
+          fullWidth
+          sx={{
+            borderRadius: "20px",
+            backgroundColor: "#F0F2F5",
+            marginRight: "10px",
+          }}
         />
-        <SentimentSatisfiedOutlinedIcon
-          sx={{ cursor: "pointer" }}
-          color="primary"
-          fontSize="large"
-        />
-        <AddOutlinedIcon
-          sx={{ cursor: "pointer" }}
-          color="primary"
-          fontSize="large"
-        />
-        <SendIcon
-          color="primary"
-          sx={{ cursor: "pointer" }}
-          onClick={handleSendMessage}
-          fontSize="large"
-        />
+        <IconButton sx={{ color: "#FFEB3B" }}>
+          <SentimentSatisfiedOutlinedIcon
+            fontSize="large"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+          />
+        </IconButton>
+        <IconButton sx={{ color: "#00B0FF" }}>
+          <AddOutlinedIcon fontSize="large" />
+        </IconButton>
+        <IconButton sx={{ color: "#4CAF50" }} onClick={handleSendMessage}>
+          <SendIcon fontSize="large" />
+        </IconButton>
+        {showEmojiPicker && (
+          <Box sx={{ position: "absolute", bottom: "70px", right: "110px" }}>
+            <EmojiPicker onEmojiClick={handleEmojiClick} />
+          </Box>
+        )}
       </Box>
-    </div>
+    </Box>
   );
 };
 
-export default chatArea;
+export default ChatArea;
