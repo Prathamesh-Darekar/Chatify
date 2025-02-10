@@ -10,37 +10,38 @@ import {
   IconButton,
   Chip,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import { PhotoCamera, Close } from "@mui/icons-material";
 import { userContext } from "../Context/UserState";
 import { useNavigate, useParams } from "react-router-dom";
 
 // CreateGroup Component
-const CreateGroup = ({ updateChat_id }) => {
+const EditGroup = ({ updateChat_id }) => {
   const [groupName, setGroupName] = useState("sss");
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [groupIcon, setGroupIcon] = useState(null);
   const [allUsers, setAllUsers] = useState(null);
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const { chat_id } = useParams();
-  // API call to get all available users
   const user = useContext(userContext);
+
+  // API call to get all available users
   useEffect(() => {
     const token = localStorage.getItem("token");
     const getUser = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8080/api/user/getuser`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${user.serverUrl}/api/user/getuser`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (response && response.status == 200) {
           setAllUsers(response.data);
         }
       } catch (e) {
+        alert(e.response?.data?.message || "An error occurred.");
         console.log("Error in GroupForm component", e);
       }
     };
@@ -48,7 +49,7 @@ const CreateGroup = ({ updateChat_id }) => {
     const getChatInfo = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/chat/${chat_id}/getinfo`,
+          `${user.serverUrl}/api/chat/${chat_id}/getinfo`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -61,14 +62,17 @@ const CreateGroup = ({ updateChat_id }) => {
           setGroupIcon(response.data.logo);
         }
       } catch (e) {
+        alert(e.response?.data?.message || "An error occurred.");
         console.log("Error in GroupForm component", e);
       }
     };
     getChatInfo();
   }, []);
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     const token = localStorage.getItem("token");
     const obj = {
       chatName: groupName,
@@ -90,12 +94,47 @@ const CreateGroup = ({ updateChat_id }) => {
         navigate(-1);
       }
     } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
       console.log("Error when editing group info");
+    }
+    setIsLoading(false);
+  };
+
+  // RETRIVE public id of image saved in cloudinary
+  const getPublicIdFromUrl = (url) => {
+    const parts = url.split("/");
+    return parts[parts.length - 1].split(".")[0];
+  };
+
+  //API CALL to delete an image from cloudinary
+  const deleteImage = async (imageUrl) => {
+    const publicId = getPublicIdFromUrl(imageUrl);
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.delete(
+        `${user.serverUrl}/api/cloudinary/delete`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: { publicId },
+        }
+      );
+    } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
+      console.error("Error deleting image:", e);
     }
   };
 
   // Handle file upload for group icon
   const handleFileChange = async (e) => {
+    setIsLoading(true);
+    if (
+      groupIcon !=
+      "http://res.cloudinary.com/prathamesh19/image/upload/v1738688808/cuwiwp0w86bk8vkeopgm.jpg"
+    ) {
+      await deleteImage(groupIcon);
+    }
     const file = e.target.files[0];
     if (!file) return;
     let formData = new FormData();
@@ -107,6 +146,7 @@ const CreateGroup = ({ updateChat_id }) => {
       formData
     );
     if (res.status == 200) setGroupIcon(res.data.url);
+    setIsLoading(false);
   };
 
   const handleChange = (e) => {
@@ -196,9 +236,10 @@ const CreateGroup = ({ updateChat_id }) => {
                 <PhotoCamera />
               </IconButton>
             </label>
-            <Typography variant="body1" sx={{ ml: 2 }}>
+            <Typography variant="body1" sx={{ ml: 2, paddingRight: "15px" }}>
               {groupIcon ? "Icon Uploaded" : "Upload Group Icon"}
             </Typography>
+            {isLoading && <CircularProgress size={24} />}
             {groupIcon && (
               <>
                 <Avatar
@@ -226,7 +267,11 @@ const CreateGroup = ({ updateChat_id }) => {
               type="submit"
               size="large"
             >
-              Submit
+              {isLoading ? (
+                <CircularProgress color="white" size={24} />
+              ) : (
+                "Submit"
+              )}
             </Button>
           </Grid>
         </Grid>
@@ -235,4 +280,4 @@ const CreateGroup = ({ updateChat_id }) => {
   );
 };
 
-export default CreateGroup;
+export default EditGroup;

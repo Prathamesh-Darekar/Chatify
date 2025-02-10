@@ -8,7 +8,12 @@ import { Box, Typography, TextField } from "@mui/material";
 import { userContext } from "../../Context/UserState";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 
-const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
+const ChatSelector = ({
+  updateChat_id,
+  chat,
+  updateFlag,
+  updateShowChatArea,
+}) => {
   const user = useContext(userContext);
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -34,14 +39,15 @@ const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
         setAvailableUsers(response.data);
         setDisplaySearchResults(true);
       }
-    } catch (err) {
-      alert(err.response.data.message);
+    } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
     }
   };
 
   // Changes chat
   const handleClick = (chat_id) => {
     updateChat_id(chat_id);
+    updateShowChatArea();
   };
 
   // Handles when we click on the search results
@@ -59,6 +65,7 @@ const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
         updateFlag();
       }
     } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
       console.log("Error in chatSelector-handleSearchResultClick", e);
     }
   };
@@ -178,6 +185,19 @@ const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
                 justifyContent: "center",
                 "&:hover": { backgroundColor: "#F8F9FA", color: "#3498DB" },
               }}
+              onClick={() => navigate("/user/edit")}
+            >
+              Edit Profile
+            </Typography>
+            <Typography
+              sx={{
+                cursor: "pointer",
+                padding: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                "&:hover": { backgroundColor: "#F8F9FA", color: "#3498DB" },
+              }}
               onClick={handleCreateGroup}
             >
               New Group
@@ -259,7 +279,6 @@ const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                   marginRight: "12px",
-                  border: "2px solid #3498DB",
                 }}
               />
               <Box sx={{ textAlign: "left" }}>
@@ -322,7 +341,6 @@ const ChatSelector = ({ updateChat_id, chat, updateFlag }) => {
               backgroundSize: "cover",
               backgroundPosition: "center",
               marginRight: "12px",
-              border: "2px solid #3498DB",
             }}
           />
           <Box sx={{ textAlign: "left" }}>

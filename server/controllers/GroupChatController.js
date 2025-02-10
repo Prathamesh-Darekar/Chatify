@@ -1,10 +1,13 @@
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 
-// Pending to add logo
+// API to create a new group
 const createGroupChat = async (req, res) => {
   let { groupName, participants, groupLogo } = req.body;
-  if (!groupName || !participants) return res.status(409).json("bad request");
+  if (!groupName || !participants)
+    return res
+      .status(409)
+      .json({ message: "Please provide all the group details" });
   participants = participants.map((user) => {
     return user._id;
   });

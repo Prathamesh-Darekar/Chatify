@@ -1,9 +1,18 @@
-import React, { createContext, useMemo, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useMemo,
+  useState,
+  useEffect,
+  useContext,
+} from "react";
 import { io } from "socket.io-client";
+import { userContext } from "./UserState";
+
 const socketContext = createContext();
 
 const SocketState = (props) => {
-  const socket = useMemo(() => io("http://localhost:8080"), []);
+  const user = useContext(userContext);
+  const socket = useMemo(() => io(user.serverUrl), []);
   return (
     <socketContext.Provider value={{ socket }}>
       {props.children}

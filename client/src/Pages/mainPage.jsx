@@ -105,6 +105,7 @@ const mainPage = ({
             updateChat_id={updateChat_id}
             chat={chat}
             updateFlag={updateFlag}
+            updateShowChatArea={updateShowChatArea}
           />
         </div>
       )}
@@ -122,6 +123,7 @@ const mainPage = ({
             updateChat_id={updateChat_id}
             chat={chat}
             updateFlag={updateFlag}
+            updateShowChatArea={updateShowChatArea}
           />
         </div>
       )}
@@ -144,6 +146,7 @@ const mainPage = ({
               updateShowChatArea={updateShowChatArea}
               updateChat={updateChat}
               chat={chat}
+              updateFlag={updateFlag}
             />
           )}
         </div>

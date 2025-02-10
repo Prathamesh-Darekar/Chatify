@@ -10,13 +10,20 @@ import { socketContext } from "../../Context/SocketState";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useMediaQuery } from "@mui/material";
 import EmojiPicker from "emoji-picker-react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
+const ChatArea = ({
+  chat_id,
+  updateShowChatArea,
+  updateChat,
+  chat,
+  updateFlag,
+}) => {
   const user = useContext(userContext);
   const socket = useContext(socketContext);
   const [newMessage, setNewMessage] = useState("");
   const [userChats, setUserChats] = useState([]);
+  const userChatsRef = useRef(userChats);
   const [chatName, setChatName] = useState("");
   const [chatLogo, setChatLogo] = useState("");
   const [groupChat, setGroupChat] = useState(null);
@@ -35,6 +42,10 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
   useEffect(() => {
     chatId.current = chat_id;
   }, [chat_id]);
+
+  useEffect(() => {
+    userChatsRef.current = userChats;
+  }, [userChats]);
 
   // Function to scroll to the bottom
   const scrollToBottom = () => {
@@ -69,7 +80,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
-          `http://localhost:8080/api/chat/${user.userDetails.username}/${chat_id}`,
+          `${user.serverUrl}/api/chat/${user.userDetails.username}/${chat_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -82,9 +93,9 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           setChatLogo(response.data.logo);
           setGroupChat(response.data.groupChat);
         }
-      } catch (err) {
-        console.log("Error in chatArea.jsx", err);
-        alert(err.response?.data?.message || "An error occurred.");
+      } catch (edit) {
+        console.log("Error in chatArea.jsx", e);
+        alert(e.response?.data?.message || "An error occurred.");
       }
     };
     if (chat_id) getChatMessages();
@@ -96,7 +107,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        "http://localhost:8080/api/message/new",
+        `${user.serverUrl}/api/message/new`,
         {
           senderId: s_id,
           msg: content,
@@ -110,19 +121,24 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
       );
       return response.data.msgId;
     } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
       console.log("Error in storeMessage:", e);
     }
   };
 
   // Handling messages in realtime
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (chat_id && newMessage !== "") {
-      const msgId = storeMessage(user.userDetails.userId, newMessage, chat_id);
-      socket.socket.emit("chat-room", { msg: newMessage, chat_id });
+      const msgId = await storeMessage(
+        user.userDetails.userId,
+        newMessage,
+        chat_id
+      );
+      socket.socket.emit("chat-room", { msg: newMessage, chat_id, msgId });
       const obj = {
         content: newMessage,
         sender: user.userDetails.userId,
-        msgId,
+        _id: msgId,
       };
       setUserChats((prevArray) => [...prevArray, obj]);
       setNewMessage("");
@@ -136,10 +152,18 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
       const obj = {
         content: data.msg,
         sender: 0,
+        _id: data.msgId,
       };
       if (data.chat_id == chatId.current)
         setUserChats((prevArray) => [...prevArray, obj]);
       return () => socket.socket.off("message");
+    });
+    // deletes the message in realtime
+    socket.socket.on("deleted-message", (data) => {
+      let newUserChats = userChatsRef.current.filter(
+        (message) => message._id != data.msgId
+      );
+      setUserChats(newUserChats);
     });
   }, []);
 
@@ -150,6 +174,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
 
   // API call to delete a message
   const handleMessageDelete = async (msgId) => {
+    socket.socket.emit("delete-message", { msgId, chat_id: chatId.current });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.delete(
@@ -160,7 +185,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
           },
           data: {
             msgId,
-            chatId: chat_id,
+            chatId: chatId.current,
           },
         }
       );
@@ -171,10 +196,14 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         setUserChats(newChatsArray);
       }
     } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
       console.log("Error in handleMessageDelete:", e);
     }
   };
-
+  const handleBackClick = () => {
+    updateShowChatArea();
+    updateFlag();
+  };
   return (
     <Box
       sx={{
@@ -195,7 +224,7 @@ const ChatArea = ({ chat_id, updateShowChatArea, updateChat, chat }) => {
         }}
       >
         {isSmallScreen && (
-          <IconButton onClick={() => updateShowChatArea()}>
+          <IconButton onClick={handleBackClick}>
             <ArrowBackIcon fontSize="large" />
           </IconButton>
         )}

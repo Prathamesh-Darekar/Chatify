@@ -25,6 +25,7 @@ const Signup = () => {
   });
   const [previewImage, setPreviewImage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (event) => {
     setSignupData({ ...signupData, [event.target.name]: event.target.value });
@@ -54,6 +55,7 @@ const Signup = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setIsLoading(true);
     if (signupData.password !== signupData.cpassword) {
       return alert("Password does not match");
     }
@@ -65,7 +67,6 @@ const Signup = () => {
     if (signupData.imageUrl) {
       formData.imageUrl = signupData.imageUrl;
     }
-    console.log(formData);
     setSignupData({
       username: "",
       password: "",
@@ -75,20 +76,25 @@ const Signup = () => {
     setPreviewImage("");
     try {
       const response = await axios.post(
-        "http://localhost:8080/api/user/register",
+        `${user1.serverUrl}/api/user/register`,
         formData
       );
 
       if (response.status === 200) {
         const { token, message, user } = response.data;
-        user1.updateUserDetails({ userId: user._id, username: user.username });
+        user1.updateUserDetails({
+          userId: user._id,
+          username: user.username,
+          dp: user.dp,
+        });
         localStorage.setItem("token", token);
         navigate("/chat");
         alert(message);
       }
-    } catch (err) {
-      alert(err.response.data.message);
+    } catch (e) {
+      alert(e.response?.data?.message || "An error occurred.");
     }
+    setIsLoading(false);
   };
   return (
     <Container maxWidth="sm">
@@ -213,7 +219,7 @@ const Signup = () => {
               },
             }}
           >
-            Sign Up
+            {isLoading ? <Icon path={mdiLoading} spin size={1} /> : "Signup"}
           </Button>
         </Box>
       </Box>

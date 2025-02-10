@@ -5,14 +5,14 @@ const {
   loginUser,
   findUser,
   getAllUsers,
+  editUser,
 } = require("../controllers/UserController");
 const wrapAsync = require("../utils/wrapAsync");
 const { isAuthorized } = require("../middleware");
 
+router.route("/:id/edit").put(isAuthorized, wrapAsync(editUser));
 router.route("/:id/finduser/:username").get(isAuthorized, wrapAsync(findUser));
-// Route for user signUp
 router.post("/register", wrapAsync(signUp));
-// Route for user login
 router.post("/login", wrapAsync(loginUser));
 router.get("/getuser", isAuthorized, wrapAsync(getAllUsers));
 

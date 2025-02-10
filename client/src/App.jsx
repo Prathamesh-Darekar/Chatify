@@ -1,5 +1,4 @@
-import { useContext, useState } from "react";
-import "./App.css";
+import { useContext, useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import User from "./Pages/User";
 import Chat from "./Pages/mainPage";
@@ -8,6 +7,7 @@ import Unauthorized from "./Pages/Unauthorized";
 import GroupForm from "./Pages/GroupForm";
 import EditGroupInfo from "./Pages/EditGroupInfo";
 import { userContext } from "./Context/UserState";
+import EditUserProfile from "./Pages/EditUserProfile";
 
 function App() {
   let user = useContext(userContext);
@@ -33,15 +33,29 @@ function App() {
                 updateChat_id={updateChat_id}
                 chat_id={chat_id}
                 updateShowChatArea={updateShowChatArea}
+                showChatArea={showChatArea}
               />
             )
           }
         />
         <Route
-          path="/:chat_id/edit"
-          element={<EditGroupInfo updateChat_id={updateChat_id} />}
+          path="/creategroup"
+          element={!user.userDetails ? <Unauthorized /> : <GroupForm />}
         />
-        <Route path="/creategroup" element={<GroupForm />} />
+        <Route
+          path="/user/edit"
+          element={!user.userDetails ? <Unauthorized /> : <EditUserProfile />}
+        />
+        <Route
+          path="/:chat_id/edit"
+          element={
+            !user.userDetails ? (
+              <Unauthorized />
+            ) : (
+              <EditGroupInfo updateChat_id={updateChat_id} />
+            )
+          }
+        />
         <Route path="/" element={<User />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>

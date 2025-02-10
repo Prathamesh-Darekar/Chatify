@@ -10,43 +10,37 @@ import {
   IconButton,
   Chip,
   Autocomplete,
+  CircularProgress,
 } from "@mui/material";
 import { PhotoCamera, Close } from "@mui/icons-material";
 import { userContext } from "../Context/UserState";
 import { useNavigate } from "react-router-dom";
 
-// CreateGroup Component
-const CreateGroup = () => {
+const GroupForm = () => {
   // State to manage form inputs
   const [groupName, setGroupName] = useState("");
   const [selectedParticipants, setSelectedParticipants] = useState([]);
   const [groupIcon, setGroupIcon] = useState(null);
   const [allUsers, setAllUsers] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  useEffect(() => {
-    console.log(allUsers);
-  }, [allUsers]);
-  useEffect(() => {
-    console.log(selectedParticipants);
-  }, [selectedParticipants]);
-  // API call to get all available users
   const user = useContext(userContext);
+
+  // API call to get all available users
   useEffect(() => {
     const getUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `http://localhost:8080/api/user/getuser`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${user.serverUrl}/api/user/getuser`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
         if (response && response.status == 200) {
           setAllUsers(response.data);
         }
       } catch (e) {
+        alert(e.response?.data?.message || "An error occurred.");
         console.log("Error in GroupForm component", e);
       }
     };
@@ -56,11 +50,11 @@ const CreateGroup = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Perform form submission logic here
+    setIsLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:8080/api/groupchat/new`,
+        `${user.serverUrl}/api/groupchat/new`,
         {
           groupName,
           participants: selectedParticipants,
@@ -78,12 +72,14 @@ const CreateGroup = () => {
       }
     } catch (e) {
       console.log("Error in group create Form");
-      alert("Error check the console");
+      alert(e.response?.data?.message || "An error occurred.");
     }
+    setIsLoading(false);
   };
 
   // Handle file upload for group icon
   const handleFileChange = async (e) => {
+    setIsLoading(true);
     const file = e.target.files[0];
     if (!file) return;
     let formData = new FormData();
@@ -95,6 +91,7 @@ const CreateGroup = () => {
       formData
     );
     if (res.status == 200) setGroupIcon(res.data.url);
+    setIsLoading(false);
   };
 
   // Handle participant selection
@@ -182,9 +179,10 @@ const CreateGroup = () => {
                 <PhotoCamera />
               </IconButton>
             </label>
-            <Typography variant="body1" sx={{ ml: 2 }}>
+            <Typography variant="body1" sx={{ ml: 2, paddingRight: "15px" }}>
               {groupIcon ? "Icon Uploaded" : "Upload Group Icon"}
             </Typography>
+            {isLoading && <CircularProgress size={24} />}
             {groupIcon && (
               <>
                 <Avatar
@@ -212,7 +210,11 @@ const CreateGroup = () => {
               type="submit"
               size="large"
             >
-              Create Group
+              {isLoading ? (
+                <CircularProgress color="white" size={24} />
+              ) : (
+                "Create Group"
+              )}
             </Button>
           </Grid>
         </Grid>
@@ -221,4 +223,4 @@ const CreateGroup = () => {
   );
 };
 
-export default CreateGroup;
+export default GroupForm;

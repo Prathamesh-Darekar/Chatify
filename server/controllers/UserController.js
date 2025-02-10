@@ -4,9 +4,9 @@ const Chat = require("../models/Chat");
 const User = require("../models/User");
 const Message = require("../models/Message");
 
+// API to create a new user
 const signUp = async (req, res) => {
   const { username, password, imageUrl } = req.body;
-  console.log(imageUrl);
   if (!(username && password))
     return res
       .status(400)
@@ -48,13 +48,12 @@ const signUp = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
-  console.log(token);
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
+// API for user login
 const loginUser = async (req, res) => {
   const { username, password } = req.body;
-
   if (!(username && password))
     return res
       .status(400)
@@ -77,7 +76,6 @@ const loginUser = async (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: "24h" }
   );
-  console.log("Logging from userCotroller-loginUser ", token);
   res.status(200).json({ token, user, message: "Welcome to chatify" });
 };
 
@@ -92,7 +90,7 @@ const findUser = async (req, res) => {
   const usersInChats = new Set();
   chats.forEach((chat) => {
     chat.users.forEach((user) => {
-      usersInChats.add(user.toString()); // Converting ObjectId to string for easy comparison
+      usersInChats.add(user.toString());
     });
   });
 
@@ -121,4 +119,27 @@ const getAllUsers = async (req, res) => {
   else res.status(200).json(allUsers);
 };
 
-module.exports = { signUp, loginUser, findUser, getAllUsers };
+// API to edit the user information
+const editUser = async (req, res) => {
+  const { id } = req.params;
+  const { username, profilePicture } = req.body;
+  if (!id || !username)
+    return res.status(400).json({ message: "Please provide username" });
+  const user1 = await User.find({ username, _id: { $ne: id } });
+  if (user1.length > 0)
+    return res.status(400).json({ message: "Username already exists" });
+  if (!id || !username || !profilePicture)
+    return res.status(400).json({ message: "Bad request" });
+  const user = await User.findById(id);
+  if (user) {
+    (user.username = username), (user.dp = profilePicture);
+    await user.save();
+    user.password = "";
+  } else {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  return res.status(200).json(user);
+};
+
+module.exports = { signUp, loginUser, findUser, getAllUsers, editUser };
