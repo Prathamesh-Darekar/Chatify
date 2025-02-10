@@ -5,7 +5,7 @@ const UserState = (props) => {
   let [userDetails, setUserDetails] = useState(
     JSON.parse(localStorage.getItem("user"))
   );
-  const serverUrl = "http://localhost:8080";
+  const serverUrl = "https://chatify-backend-t1a1.onrender.com";
 
   let updateUserDetails = (obj) => {
     setUserDetails(obj);
